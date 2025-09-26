@@ -45,7 +45,7 @@ async function build() {
         // Step 2: Create unpacked directory only
         console.log('📁 Creating unpacked directory...');
         const dirCommand = 'npx electron-builder --win dir --config.compression=store';
-        await runWithTimeout(dirCommand, 90000); // 90 seconds should be enough for dir build
+        await runWithTimeout(dirCommand, 300000); // 5 minutes for dir build (was timing out at 90s)
         
         console.log('🎉 Directory build completed successfully!');
         console.log('📁 Your app is in: dist/win-unpacked/');

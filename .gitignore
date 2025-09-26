@@ -11,6 +11,8 @@
 # production
 /build
 dist/
+dist-mac/
+dist-packager/
 
 # misc
 .DS_Store

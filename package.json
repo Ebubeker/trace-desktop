@@ -45,6 +45,11 @@
     "electron:build:dir": "node build-dir.js",
     "electron:build:legacy": "npm run build && npm run electron:package",
     "electron:package": "electron-builder -c.extraMetadata.main=build/main.js",
+    "build:win": "npm run build && npx electron-packager . \"Desktop Tracker\" --platform=win32 --arch=x64 --out=dist-packager --overwrite",
+    "build:mac-intel": "npm run build && npx electron-packager . \"Desktop Tracker\" --platform=darwin --arch=x64 --out=dist-mac --overwrite",
+    "build:mac-silicon": "npm run build && npx electron-packager . \"Desktop Tracker\" --platform=darwin --arch=arm64 --out=dist-mac --overwrite",
+    "build:mac-all": "npm run build:mac-intel && npm run build:mac-silicon",
+    "build:all": "npm run build:win && npm run build:mac-all",
     "clean": "rimraf dist build",
     "prebuild": "npm run clean"
   },
@@ -65,8 +70,14 @@
       "output": "dist"
     },
     "win": {
-      "target": "nsis",
-      "publisherName": "Desktop Tracker"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -97,6 +108,7 @@
     "autoprefixer": "^10.4.21",
     "electron": "^38.1.2",
     "electron-builder": "^26.0.12",
+    "electron-packager": "^17.1.2",
     "postcss": "^8.5.6",
     "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.17"

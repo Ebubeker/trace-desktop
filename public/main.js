@@ -65,11 +65,19 @@ function createWindow() {
         }
     })
 
-    mainWindow.loadURL(
-      isDev 
-        ? 'http://localhost:3000' 
-        : `file://${path.join(__dirname, '../build/index.html')}`
-    )
+    // More reliable way to detect if we're in a packaged app
+    const isPackaged = app.isPackaged || !isDev;
+    
+    if (isPackaged) {
+        // In production/packaged app, load from build folder
+        const indexPath = path.join(__dirname, '../build/index.html');
+        console.log('Loading from:', indexPath);
+        mainWindow.loadFile(indexPath);
+    } else {
+        // In development, load from dev server
+        console.log('Loading from: http://localhost:3000');
+        mainWindow.loadURL('http://localhost:3000');
+    }
     
     // Start broadcasting activity data to renderer
     startActivityBroadcast()
