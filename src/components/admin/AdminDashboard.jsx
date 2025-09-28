@@ -98,10 +98,10 @@ export function AdminDashboard() {
     switch (activeTab) {
       case 'activity':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity Logs</CardTitle>
-              <CardDescription>
+          <Card className="border border-gray-200/30">
+            <CardHeader className="text-[#111d29]">
+              <CardTitle className="text-xl font-semibold">Activity Logs</CardTitle>
+              <CardDescription className="text-gray-600">
                 View processed activity logs from users
               </CardDescription>
             </CardHeader>
@@ -117,7 +117,7 @@ export function AdminDashboard() {
                     <select
                       value={selectedUserId}
                       onChange={(e) => setSelectedUserId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200/50 rounded-md focus:outline-none focus:ring-2 focus:ring-[#111d29]/20 focus:border-[#111d29]"
                     >
                       <option value="">Select a user...</option>
                       {users.map((user) => (
@@ -165,13 +165,13 @@ export function AdminDashboard() {
 
       case 'profile':
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="border border-gray-200/30">
+            <CardHeader className="text-[#111d29]">
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
                 <UserCircle className="h-5 w-5" />
                 Profile & Organization
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-600">
                 View your profile and organization details
               </CardDescription>
             </CardHeader>
@@ -226,36 +226,36 @@ export function AdminDashboard() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Organization</h3>
                 {loadingOrganization ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <div className="text-blue-600">Loading organization details...</div>
+                  <div className="bg-gray-50 border border-gray-200/50 rounded-lg p-6 text-center">
+                    <div className="text-[#111d29]">Loading organization details...</div>
                   </div>
                 ) : (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-gray-50 border border-gray-200/50 rounded-lg p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-blue-600">Organization Name</label>
-                        <p className="text-lg font-semibold text-blue-900 mt-1">
+                        <label className="text-sm font-medium text-[#111d29]">Organization Name</label>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
                           {organizationData?.organization.name || 'Not available'}
                         </p>
                       </div>
                       
                       <div>
-                        <label className="text-sm font-medium text-blue-600">Organization Type</label>
-                        <p className="text-sm text-blue-800 mt-1">
+                        <label className="text-sm font-medium text-[#111d29]">Organization Type</label>
+                        <p className="text-sm text-gray-700 mt-1">
                           {organizationData?.type || 'Not specified'}
                         </p>
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium text-blue-600">Organization ID</label>
-                        <p className="text-sm font-mono text-blue-700 mt-1 break-all">
+                        <label className="text-sm font-medium text-[#111d29]">Organization ID</label>
+                        <p className="text-sm font-mono text-gray-600 mt-1 break-all">
                           {userProfile?.org_id || 'Not available'}
                         </p>
                       </div>
                       
                       <div>
-                        <label className="text-sm font-medium text-blue-600">Member Since</label>
-                        <p className="text-sm text-blue-800 mt-1">
+                        <label className="text-sm font-medium text-[#111d29]">Member Since</label>
+                        <p className="text-sm text-gray-700 mt-1">
                           {userProfile?.created_at 
                             ? new Date(userProfile.created_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
@@ -269,17 +269,17 @@ export function AdminDashboard() {
                     </div>
 
                     {organizationData?.description && (
-                      <div className="mt-4 pt-4 border-t border-blue-200">
-                        <label className="text-sm font-medium text-blue-600">Description</label>
-                        <p className="text-sm text-blue-800 mt-1">
+                      <div className="mt-4 pt-4 border-t border-gray-200/50">
+                        <label className="text-sm font-medium text-[#111d29]">Description</label>
+                        <p className="text-sm text-gray-700 mt-1">
                           {organizationData.description}
                         </p>
                       </div>
                     )}
 
                     {organizationData?.created_at && (
-                      <div className="mt-4 pt-4 border-t border-blue-200">
-                        <div className="flex justify-between items-center text-xs text-blue-600">
+                      <div className="mt-4 pt-4 border-t border-gray-200/50">
+                        <div className="flex justify-between items-center text-xs text-[#111d29]">
                           <span>Organization created: {new Date(organizationData.created_at).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -299,25 +299,25 @@ export function AdminDashboard() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Account Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-green-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600 mb-1">
+                  <div className="bg-[#111d29] rounded-lg p-4 text-center text-white">
+                    <div className="text-2xl font-bold mb-1">
                       {userProfile?.role === 'admin' ? 'Full' : 'Limited'}
                     </div>
-                    <div className="text-sm text-green-700">Access Level</div>
+                    <div className="text-sm text-gray-200">Access Level</div>
                   </div>
 
-                  <div className="bg-purple-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600 mb-1">
+                  <div className="bg-gray-50 border border-gray-200/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-[#111d29] mb-1">
                       Active
                     </div>
-                    <div className="text-sm text-purple-700">Account Status</div>
+                    <div className="text-sm text-gray-600">Account Status</div>
                   </div>
 
-                  <div className="bg-orange-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600 mb-1">
+                  <div className="bg-gray-50 border border-gray-200/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-[#111d29] mb-1">
                       {user?.email_confirmed_at ? 'Verified' : 'Pending'}
                     </div>
-                    <div className="text-sm text-orange-700">Email Status</div>
+                    <div className="text-sm text-gray-600">Email Status</div>
                   </div>
                 </div>
               </div>
@@ -326,7 +326,11 @@ export function AdminDashboard() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
                 <div className="flex flex-wrap gap-3">
-                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <Button 
+                    onClick={handleSignOut}
+                    className="bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
+                    size="sm"
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </Button>
@@ -342,20 +346,22 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-gray-50 p-8" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header with user info */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>
-                Admin Dashboard{userProfile?.name ? ` - ${userProfile.name}` : ''}
-              </CardTitle>
-              <Button onClick={handleSignOut} disabled={loading} variant="outline">
-                {loading ? 'Signing out...' : 'Sign Out'}
-              </Button>
-            </div>
-          </CardHeader>
+        <Card className="border border-gray-200/30">
+          <CardContent className="flex justify-between items-center">
+            <h1 className="text-2xl font-semibold text-[#111d29]">
+              Admin Dashboard{userProfile?.name ? ` - ${userProfile.name}` : ''}
+            </h1>
+            <Button 
+              onClick={handleSignOut} 
+              disabled={loading}
+              className="bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
+            >
+              {loading ? 'Signing out...' : 'Sign Out'}
+            </Button>
+          </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

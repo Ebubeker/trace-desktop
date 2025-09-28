@@ -269,15 +269,15 @@ export function TimeTracker({ className }) {
   }
 
   return (
-    <Card className={`w-full ${className}`}>
-      <CardHeader>
-        <CardTitle className="text-center text-2xl font-bold">
+    <Card className={`w-full border border-gray-200/30 ${className}`}>
+      <CardHeader className="text-[#111d29] rounded-t-lg">
+        <CardTitle className="text-center text-2xl font-semibold">
           Time Tracker
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="text-center">
-          <div className="text-4xl font-mono font-bold text-primary mb-2">
+          <div className="text-4xl font-mono font-bold text-[#111d29] mb-2">
             {formatTime(time)}
           </div>
           <div className="text-sm text-muted-foreground space-y-1">
@@ -305,7 +305,7 @@ export function TimeTracker({ className }) {
             <Button 
               onClick={handlePlay} 
               size="lg" 
-              className="gap-2"
+              className="gap-2 bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
               disabled={isStartingUp}
             >
               <Play className="h-4 w-4" />
@@ -314,14 +314,23 @@ export function TimeTracker({ className }) {
           )}
 
           {isRunning && !isPaused && (
-            <Button onClick={handlePause} variant="outline" size="lg" className="gap-2">
+            <Button 
+              onClick={handlePause} 
+              variant="outline" 
+              size="lg" 
+              className="gap-2 border-[#111d29] text-[#111d29] hover:bg-[#111d29] hover:text-white"
+            >
               <Pause className="h-4 w-4" />
               Pause
             </Button>
           )}
 
           {isPaused && (
-            <Button onClick={handleResume} size="lg" className="gap-2">
+            <Button 
+              onClick={handleResume} 
+              size="lg" 
+              className="gap-2 bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
+            >
               <Play className="h-4 w-4" />
               Resume
             </Button>
@@ -351,20 +360,20 @@ export function TimeTracker({ className }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-blue-600">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <div className="text-2xl font-bold text-[#111d29]">
                   {formatTime(timeStats.today)}
                 </div>
-                <div className="text-xs text-blue-600 font-medium">
+                <div className="text-xs text-gray-600 font-medium">
                   Today
                 </div>
               </div>
               
-              <div className="bg-green-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-green-600">
+              <div className="bg-[#111d29] rounded-lg p-3">
+                <div className="text-2xl font-bold text-white">
                   {formatTime(timeStats.week)}
                 </div>
-                <div className="text-xs text-green-600 font-medium">
+                <div className="text-xs text-gray-200 font-medium">
                   This Week
                 </div>
               </div>
@@ -375,7 +384,7 @@ export function TimeTracker({ className }) {
             <button
               onClick={fetchTimeStats}
               disabled={loadingStats}
-              className="text-xs text-muted-foreground hover:text-primary underline disabled:opacity-50"
+              className="text-xs text-gray-500 hover:text-[#111d29] underline disabled:opacity-50"
             >
               {loadingStats ? 'Refreshing...' : 'Refresh Stats'}
             </button>

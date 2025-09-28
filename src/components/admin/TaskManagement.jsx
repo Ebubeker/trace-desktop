@@ -20,6 +20,7 @@ export function TaskManagement() {
   const [editingTask, setEditingTask] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState({})
   const [selectedUserId, setSelectedUserId] = useState('')
+  const [showTodayOnly, setShowTodayOnly] = useState(true)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -40,6 +41,22 @@ export function TaskManagement() {
     'Planning',
     'Other'
   ]
+
+  // Helper function to check if a task is from today
+  const isTaskFromToday = (task) => {
+    if (!task.created_at) return false
+    const today = new Date().toDateString()
+    const taskDate = new Date(task.created_at).toDateString()
+    return today === taskDate
+  }
+
+  // Filter tasks based on showTodayOnly state
+  const getFilteredTasks = () => {
+    if (showTodayOnly) {
+      return tasks.filter(isTaskFromToday)
+    }
+    return tasks
+  }
 
   const fetchUsers = async () => {
     try {
@@ -215,10 +232,10 @@ export function TaskManagement() {
   return (
     <div className="space-y-6">
       {/* Create/Edit Task Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingTask ? 'Edit Task' : 'Create New Task'}</CardTitle>
-          <CardDescription>
+      <Card className="border border-gray-200/30">
+        <CardHeader className="text-[#111d29]">
+          <CardTitle className="text-xl font-semibold">{editingTask ? 'Edit Task' : 'Create New Task'}</CardTitle>
+          <CardDescription className="text-gray-600">
             {editingTask ? 'Update task details and requirements' : 'Assign tasks to users with specific requirements and duration'}
           </CardDescription>
         </CardHeader>
@@ -331,7 +348,7 @@ export function TaskManagement() {
               <Button 
                 type="submit" 
                 disabled={loading || !isFormValid}
-                className="w-full md:w-auto"
+                className="w-full md:w-auto bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
               >
                 {loading ? (editingTask ? 'Updating...' : 'Creating...') : (editingTask ? 'Update Task' : 'Create Task')}
               </Button>
@@ -353,12 +370,29 @@ export function TaskManagement() {
       </Card>
 
       {/* Tasks List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Tasks</CardTitle>
-          <CardDescription>
-            Overview of recently created tasks
-          </CardDescription>
+      <Card className="border border-gray-200/30">
+        <CardHeader className="text-[#111d29]">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-xl font-semibold">
+                {showTodayOnly ? "Today's Tasks" : "All Tasks"}
+              </CardTitle>
+              <CardDescription className="text-gray-600">
+                {showTodayOnly 
+                  ? "Tasks created today" 
+                  : "Overview of all created tasks"
+                }
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTodayOnly(!showTodayOnly)}
+              className="border-[#111d29] text-[#111d29] hover:bg-[#111d29] hover:text-white"
+            >
+              {showTodayOnly ? 'Show All' : 'Show Today Only'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* User Selection for Viewing Tasks */}
@@ -388,9 +422,11 @@ export function TaskManagement() {
 
           {loadingTasks ? (
             <div className="text-center py-4">Loading tasks...</div>
-          ) : tasks.length > 0 ? (
-            <div className="space-y-3">
-              {tasks.slice(0, 10).map((task) => (
+          ) : (() => {
+            const filteredTasks = getFilteredTasks()
+            return filteredTasks.length > 0 ? (
+              <div className="space-y-3">
+                {filteredTasks.slice(0, 10).map((task) => (
                 <div key={task.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start">
                     <div className="space-y-1 flex-1">
@@ -431,9 +467,10 @@ export function TaskManagement() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No tasks created yet
+              {showTodayOnly ? "No tasks created today" : "No tasks created yet"}
             </div>
-          )}
+          )
+        })()}
         </CardContent>
       </Card>
     </div>

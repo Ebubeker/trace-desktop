@@ -11,7 +11,94 @@ export function Logs({ limit = 50, userId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expandedTask, setExpandedTask] = useState(null);
+  const [lastNotifiedTaskIds, setLastNotifiedTaskIds] = useState(null);
   const { user } = useAuth();
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Check for no_focus notifications
+  useEffect(() => {
+    if (tasks.length >= 2) {
+      const lastTwoTasks = tasks.slice(0, 2); // Get the most recent 2 tasks
+      const bothHaveNoFocus = lastTwoTasks.every(task => task.no_focus === true);
+      
+      console.log('Checking focus status:', {
+        lastTwoTasks: lastTwoTasks.map(t => ({ id: t.id, no_focus: t.no_focus })),
+        bothHaveNoFocus
+      });
+      
+      if (bothHaveNoFocus) {
+        // Create a unique identifier for this set of tasks to avoid duplicate notifications
+        const currentTaskIds = lastTwoTasks.map(task => task.id).sort().join('-');
+        
+        if (lastNotifiedTaskIds !== currentTaskIds) {
+          console.log('Triggering no-focus notification for tasks:', currentTaskIds);
+          showNoFocusNotification();
+          setLastNotifiedTaskIds(currentTaskIds);
+        }
+      }
+    }
+  }, [tasks, lastNotifiedTaskIds]);
+
+  const showNoFocusNotification = () => {
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        try {
+          const notification = new Notification('Focus Alert', {
+            body: 'You seem to be losing focus. The last 2 activities show no focus detected.',
+            icon: '/favicon.ico', // You can customize this
+            badge: '/favicon.ico',
+            tag: 'no-focus-alert', // This prevents multiple notifications with the same tag
+            requireInteraction: true, // Keeps notification visible until user interacts
+          });
+
+          // Auto close after 10 seconds if user doesn't interact
+          setTimeout(() => {
+            notification.close();
+          }, 10000);
+
+          // Optional: Handle notification click
+          notification.onclick = () => {
+            window.focus(); // Bring window to front
+            notification.close();
+          };
+
+          console.log('Desktop notification sent successfully');
+        } catch (error) {
+          console.error('Failed to show desktop notification:', error);
+          showFallbackAlert();
+        }
+      } else if (Notification.permission === 'denied') {
+        console.warn('Desktop notifications are denied. Showing fallback alert.');
+        showFallbackAlert();
+      } else {
+        // Permission is 'default', try to request it
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            showNoFocusNotification(); // Retry
+          } else {
+            showFallbackAlert();
+          }
+        });
+      }
+    } else {
+      console.warn('Desktop notifications not supported. Showing fallback alert.');
+      showFallbackAlert();
+    }
+  };
+
+  const showFallbackAlert = () => {
+    // Fallback for when desktop notifications aren't available
+    console.warn('🚨 FOCUS ALERT: You seem to be losing focus. The last 2 activities show no focus detected.');
+    
+    // Optional: You could also show an in-app notification or alert
+    // For now, just log to console as a fallback
+  };
 
   const fetchTasks = useCallback(async () => {
     const targetUserId = userId || user?.id;
@@ -59,6 +146,7 @@ export function Logs({ limit = 50, userId }) {
     const isExpanded = expandedTask === task.id;
     const duration = formatTaskDuration(task.duration_minutes);
     const statusColor = getProcessedTaskStatusColor(task.status);
+    const hasNoFocus = task.no_focus === true;
 
     const [shortDesc, bullets, conclusion] = task && task.log_pretty_desc ? task.log_pretty_desc.split("\n\n") : [];
 
@@ -73,13 +161,20 @@ export function Logs({ limit = 50, userId }) {
     return (
       <div key={task.id} className="mb-1">
         <div
-          className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+          className={`cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors ${
+            hasNoFocus ? 'border-l-4 border-red-400 bg-red-50' : ''
+          }`}
           onClick={() => toggleTaskDetails(task.id)}
         >
           <span className='font-[500] text-blue-600'>
             {startTime}
           </span>
           <span className="text-gray-700"> – User {task.task_title};</span>
+          {hasNoFocus && (
+            <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+              🔴 No Focus
+            </span>
+          )}
         </div>
 
         {isExpanded && task.log_pretty_desc && (

@@ -35,49 +35,63 @@ export function AuthForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>{isSignUp ? 'Sign Up' : 'Sign In'}</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-md border border-gray-200/30">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl font-semibold text-[#111d29] mb-2">
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
+        </CardTitle>
+        <CardDescription className="text-gray-600">
           {isSignUp 
             ? 'Create a new account to get started' 
             : 'Sign in to your account'
           }
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <form onSubmit={handleAuth} className="space-y-4">
-          <div>
-            <Input
-              type="email"
-              placeholder="Your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <div className="space-y-4">
+            <div>
+              <Input
+                type="email"
+                placeholder="Your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="border-gray-200/50 focus:border-[#111d29] focus:ring-[#111d29]/20"
+              />
+            </div>
+            <div>
+              <Input
+                type="password"
+                placeholder="Your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-gray-200/50 focus:border-[#111d29] focus:ring-[#111d29]/20"
+              />
+            </div>
           </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+          <Button 
+            type="submit" 
+            className="w-full bg-[#111d29] hover:bg-[#1a2936] text-white border-none py-2.5"
+            disabled={loading}
+          >
+            {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
           </Button>
           {message && (
-            <p className={`text-sm ${message.includes('email') ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-sm p-3 rounded-lg ${
+              message.includes('email') 
+                ? 'text-green-700 bg-green-50 border border-green-200/50' 
+                : 'text-red-700 bg-red-50 border border-red-200/50'
+            }`}>
               {message}
-            </p>
+            </div>
           )}
         </form>
-        <div className="mt-4 text-center">
+        <div className="text-center border-t pt-6">
           <button
             type="button"
-            className="text-sm text-primary hover:underline"
+            className="text-sm text-[#111d29] hover:underline font-medium"
             onClick={() => setIsSignUp(!isSignUp)}
           >
             {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}

@@ -328,21 +328,21 @@ export function UserManagement() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border border-gray-200/30">
+      <CardHeader className="text-[#111d29]">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl font-semibold">
               <Users className="h-5 w-5" />
               User Management
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-600">
               Create and manage user accounts for your organization
             </CardDescription>
           </div>
           <Button 
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="gap-2"
+            className="gap-2 bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
           >
             <UserPlus className="h-4 w-4" />
             {showCreateForm ? 'Cancel' : 'Add User'}
@@ -366,10 +366,10 @@ export function UserManagement() {
 
         {/* Create User Form */}
         {showCreateForm && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-lg">Create New User</CardTitle>
-              <CardDescription>
+          <Card className="border border-gray-200/50 bg-gray-50">
+            <CardHeader className="text-[#111d29]">
+              <CardTitle className="text-lg font-semibold">Create New User</CardTitle>
+              <CardDescription className="text-gray-600">
                 Add a new user account to your organization
               </CardDescription>
             </CardHeader>
@@ -476,7 +476,7 @@ export function UserManagement() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={creating}>
+                  <Button type="submit" disabled={creating} className="bg-[#111d29] hover:bg-[#1a2936] text-white border-none">
                     {creating ? 'Creating...' : 'Create User'}
                   </Button>
                 </div>
@@ -583,7 +583,7 @@ export function UserManagement() {
                           variant="ghost"
                           onClick={() => handleEditUser(user)}
                           disabled={deleting[user.id]}
-                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="h-8 w-8 p-0 text-text-[#111d29] hover:text-[#111d29] hover:bg-[#1a2936]/10"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>

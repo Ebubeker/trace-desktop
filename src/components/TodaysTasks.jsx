@@ -109,13 +109,13 @@ export function TodaysTasks() {
   const completedTasks = tasks.filter(task => task.status === 'completed')
 
   return (
-    <Card className="h-fit">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="h-fit border border-gray-200/30">
+      <CardHeader className="text-[#111d29] rounded-t-lg">
+        <CardTitle className="flex items-center gap-2 text-xl font-semibold">
           <Clock className="h-5 w-5" />
           Today's Tasks
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-600">
           Your assigned tasks for today
         </CardDescription>
       </CardHeader>
@@ -152,11 +152,11 @@ export function TodaysTasks() {
                         >
                           <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all ${
                             updating[task.id] 
-                              ? 'border-blue-300 bg-blue-50' 
-                              : 'border-gray-300 hover:border-blue-400'
+                              ? 'border-[#111d29] bg-gray-50' 
+                              : 'border-gray-300 hover:border-[#111d29]'
                           }`}>
                             {updating[task.id] && (
-                              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                              <div className="w-2 h-2 bg-[#111d29] rounded-full animate-pulse" />
                             )}
                           </div>
                         </div>
@@ -194,7 +194,7 @@ export function TodaysTasks() {
 
                       {/* Expandable description */}
                       {task.description && expandedTasks.has(task.id) && (
-                        <div className="ml-8 mr-2 mb-2 p-3 bg-gray-50 rounded-lg">
+                        <div className="ml-8 mr-2 mb-2 p-3 bg-gray-50 border-l-4 border-[#111d29] rounded-lg">
                           <p className="text-sm text-gray-700">{task.description}</p>
                         </div>
                       )}
@@ -220,7 +220,7 @@ export function TodaysTasks() {
                       >
                         {/* Completed checkbox */}
                         <div className="flex-shrink-0">
-                          <div className="w-5 h-5 bg-green-500 border-2 border-green-500 rounded flex items-center justify-center">
+                          <div className="w-5 h-5 bg-[#111d29] border-2 border-[#111d29] rounded flex items-center justify-center">
                             <CheckCircle2 className="w-3 h-3 text-white" />
                           </div>
                         </div>
@@ -260,7 +260,7 @@ export function TodaysTasks() {
 
                       {/* Expandable description */}
                       {task.description && expandedTasks.has(task.id) && (
-                        <div className="ml-8 mr-2 mb-2 p-3 bg-gray-50 rounded-lg border-l-2 border-green-200 opacity-75">
+                        <div className="ml-8 mr-2 mb-2 p-3 bg-gray-50 rounded-lg border-l-4 border-[#111d29] opacity-75">
                           <p className="text-sm text-gray-600 line-through">{task.description}</p>
                         </div>
                       )}
