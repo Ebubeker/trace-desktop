@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { 
+import {
   fetchProcessedTasks,
   formatTaskDuration,
   getProcessedTaskStatusColor
@@ -19,7 +19,7 @@ export function Logs({ limit = 50, userId }) {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const tasksResponse = await fetchProcessedTasks(targetUserId, limit);
       setTasks(tasksResponse.tasks.tasks);
@@ -60,9 +60,19 @@ export function Logs({ limit = 50, userId }) {
     const duration = formatTaskDuration(task.duration_minutes);
     const statusColor = getProcessedTaskStatusColor(task.status);
 
+    const [shortDesc, bullets, conclusion] = task && task.log_pretty_desc ? task.log_pretty_desc.split("\n\n") : [];
+
+    
+    const newBullet = bullets ? (bullets.includes("*") ? "*" : "-") : "-";
+
+    const bulletLines = bullets ? bullets
+      .split("\n")
+      .filter(line => line.startsWith(newBullet))
+      .map(line => line.replace(newBullet, "")) : [];
+
     return (
       <div key={task.id} className="mb-1">
-        <div 
+        <div
           className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
           onClick={() => toggleTaskDetails(task.id)}
         >
@@ -72,9 +82,34 @@ export function Logs({ limit = 50, userId }) {
           <span className="text-gray-700"> – User {task.task_title};</span>
         </div>
 
-        {isExpanded && (
+        {isExpanded && task.log_pretty_desc && (
           <div className="ml-6 mt-2 mb-3 p-3 bg-white rounded-md border border-gray-200">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="space-y-6 p-4 bg-white rounded-2xl shadow-md">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">Objective</h3>
+                <p className="text-gray-600">
+                  {shortDesc.replace("Objective:", "").trim()}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Actions taken</h3>
+                <ul className="list-disc list-inside space-y-1 text-gray-600">
+                  {bulletLines.map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">Results</h3>
+                <p className="text-gray-600">
+                  {conclusion.replace("Results:", "").trim()}
+                </p>
+              </div>
+            </div>
+            {/* {task.log_pretty_desc} */}
+            {/* <div className="flex items-center gap-2 mb-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>
                 {task.status}
               </span>
@@ -125,7 +160,7 @@ export function Logs({ limit = 50, userId }) {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         )}
       </div>
@@ -146,15 +181,15 @@ export function Logs({ limit = 50, userId }) {
       <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-gray-50 to-transparent z-10 pointer-events-none"></div>
 
       <div className="bg-gray-50 text-black font-sans text-sm h-[650px] overflow-y-auto px-4 py-8" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
-        
+
         <div className="mb-4">
           <div className="text-lg font-medium text-gray-800 mb-2">
-            Processed Activity Logs 
+            Processed Activity Logs
             {userId && <span className="text-sm font-normal text-gray-500"> - User: {userId.substring(0, 8)}...</span>}
           </div>
           <div className="text-xs text-gray-500">Updates every 10 seconds • Click any log to see details</div>
         </div>
-        
+
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <span>Loading processed tasks...</span>
@@ -162,7 +197,7 @@ export function Logs({ limit = 50, userId }) {
         ) : error ? (
           <div className="text-red-500 text-center py-4">
             Error: {error}
-            <button 
+            <button
               onClick={fetchTasks}
               className="ml-2 text-blue-500 underline"
             >
@@ -173,7 +208,7 @@ export function Logs({ limit = 50, userId }) {
           <div className="text-gray-500 text-center py-8">
             <div className="mb-2">No processed tasks yet</div>
             <div className="text-xs">
-              {userId 
+              {userId
                 ? "This user hasn't started tracking or no context switches detected yet"
                 : "Start tracking - tasks will appear here when context switches are detected"
               }

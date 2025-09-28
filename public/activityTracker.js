@@ -2,6 +2,10 @@ const { activeWindow } = require('get-windows');
 const { default: psList } = require('ps-list');
 const { spawn } = require('child_process');
 const fetch = require('node-fetch');
+const path = require('path');
+
+// Load environment variables using dotenv
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 class ActivityTracker {
   constructor() {
@@ -13,6 +17,7 @@ class ActivityTracker {
     this.trackingInterval = null;
     this.previousWindow = null;
     this.sessionStart = null;
+    this.currentTaskId = null; // Track current task ID
     
     console.log('ActivityTracker initialized');
   }
@@ -46,13 +51,19 @@ class ActivityTracker {
     this.startIdleDetection();
   }
 
-  stop() {
+  async stop() {
     if (!this.isTracking) return;
+    
+    // Send completed task if timer was running
+    if (this.isTimerRunning && this.userId && this.currentTaskId) {
+      await this.sendProcessedTask('completed');
+    }
     
     this.isTracking = false;
     this.isTimerRunning = false;
     this.userId = null;
     this.previousWindow = null;
+    this.currentTaskId = null;
     console.log('Stopping activity tracking...');
     
     if (this.trackingInterval) {
@@ -61,12 +72,71 @@ class ActivityTracker {
     }
   }
 
-  setTimerStatus(isRunning, userId = null) {
+  async setTimerStatus(isRunning, userId = null) {
+    const wasRunning = this.isTimerRunning;
+    
     this.isTimerRunning = isRunning;
     if (userId) {
       this.userId = userId;
     }
     console.log('Timer status updated:', { isRunning, userId });
+    
+    // Send processed task when timer status changes
+    if (wasRunning !== isRunning && this.userId) {
+      if (isRunning) {
+        // Starting timer - create a new task
+        this.currentTaskId = this.generateTaskId();
+        await this.sendProcessedTask('started');
+      } else {
+        // Stopping timer - complete the current task
+        await this.sendProcessedTask('completed');
+        this.currentTaskId = null;
+      }
+    }
+  }
+
+  generateTaskId() {
+    // Generate a unique task ID using timestamp and random number
+    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  async sendProcessedTask(status) {
+    try {
+      if (!this.userId) return;
+
+      const taskName = status === 'started' ? 'Work Session' : 'Work Session';
+      const taskDescription = status === 'started' 
+        ? 'Started a new work session' 
+        : 'Completed work session';
+
+      const payload = {
+        userId: this.userId,
+        taskId: this.currentTaskId || this.generateTaskId(),
+        taskName,
+        taskDescription,
+        taskStatus: status,
+        taskTimestamp: new Date().toISOString()
+      };
+
+      // Use environment variable for backend URL with fallback
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com';
+      
+      const response = await fetch(`${backendUrl}/api/activity/addProcessedTask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      console.log('Processed task sent to API:', payload);
+    } catch (error) {
+      console.error('Failed to send processed task to API:', error);
+    }
   }
 
   async sendActivityToAPI(activityData) {
@@ -89,7 +159,10 @@ class ActivityTracker {
         idleTime: Math.floor((activityData.idleState?.idleTime || 0) / 1000) // Convert to seconds
       };
 
-      const response = await fetch('https://loop-1lxq.onrender.com/api/activity/add', {
+      // Use environment variable for backend URL with fallback
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com';
+      
+      const response = await fetch(`${backendUrl}/api/activity/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

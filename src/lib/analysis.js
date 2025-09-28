@@ -1,5 +1,8 @@
+// Get backend URL from environment variable
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com';
+
 export async function fetchWorkAnalysis(userId) {
-  const response = await fetch(`https://loop-1lxq.onrender.com/api/analysis/work/${userId}`, {
+  const response = await fetch(`${BACKEND_URL}/api/analysis/work/${userId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -46,7 +49,7 @@ export function getTaskStatusColor(status) {
 }
 
 export async function fetchRawActivities(limit = 50) {
-  const response = await fetch(`https://loop-1lxq.onrender.com/api/activity/raw?limit=${limit}`, {
+  const response = await fetch(`${BACKEND_URL}/api/activity/raw?limit=${limit}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -61,7 +64,7 @@ export async function fetchRawActivities(limit = 50) {
 }
 
 export async function fetchProcessedTasks(userId, limit = 50) {
-  const response = await fetch(`https://loop-1lxq.onrender.com/api/activity/tasks/${userId}?limit=${limit}`, {
+  const response = await fetch(`${BACKEND_URL}/api/activity/tasks/${userId}?limit=${limit}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -76,7 +79,7 @@ export async function fetchProcessedTasks(userId, limit = 50) {
 }
 
 export async function fetchCurrentTaskStatus(userId) {
-  const response = await fetch(`https://loop-1lxq.onrender.com/api/activity/status/${userId}`, {
+  const response = await fetch(`${BACKEND_URL}/api/activity/status/${userId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

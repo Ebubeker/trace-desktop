@@ -3,8 +3,11 @@ import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Play, Pause, Square } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { createTimeTrackingSession, updateTimeTrackingSession, fetchTimeTrackingStats } from '../lib/timeTracking'
 
 const { ipcRenderer } = window.require('electron');
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com';
 
 export function TimeTracker({ className }) {
   const [time, setTime] = useState(0)
@@ -12,16 +15,26 @@ export function TimeTracker({ className }) {
   const [isPaused, setIsPaused] = useState(false)
   const [isStartingUp, setIsStartingUp] = useState(false)
   const [activityTrackingStatus, setActivityTrackingStatus] = useState({ isTracking: false })
-  // eslint-disable-next-line no-unused-vars  
-  const [sessionStartTime, setSessionStartTime] = useState(null) // Track session for analytics
+  const [sessionStartTime, setSessionStartTime] = useState(null)
+  const [pausedTime, setPausedTime] = useState(0) // Track accumulated time before pauses
+  const [pauseStartTime, setPauseStartTime] = useState(null) // Track when pause started
+  const [currentSessionId, setCurrentSessionId] = useState(null) // Track current session ID
+  const [timeStats, setTimeStats] = useState({ today: 0, week: 0 }) // Daily and weekly stats
+  const [loadingStats, setLoadingStats] = useState(false)
   const intervalRef = useRef(null)
   const { user } = useAuth()
 
   useEffect(() => {
-    if (isRunning && !isPaused) {
-      intervalRef.current = setInterval(() => {
-        setTime((prevTime) => prevTime + 1)
-      }, 1000)
+    if (isRunning && !isPaused && sessionStartTime) {
+      // Calculate time immediately
+      const calculateTime = () => {
+        const now = new Date()
+        const elapsed = Math.floor((now - sessionStartTime) / 1000) - pausedTime
+        setTime(Math.max(0, elapsed))
+      }
+      
+      calculateTime() // Set time immediately
+      intervalRef.current = setInterval(calculateTime, 1000) // Then update every second
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
@@ -33,9 +46,8 @@ export function TimeTracker({ className }) {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, isPaused])
+  }, [isRunning, isPaused, sessionStartTime, pausedTime])
 
-  // Monitor Activity Tracking status
   useEffect(() => {
     const updateStatus = async () => {
       try {
@@ -53,10 +65,8 @@ export function TimeTracker({ className }) {
     return () => clearInterval(statusInterval)
   }, [])
 
-  // Cleanup on component unmount
   useEffect(() => {
     return () => {
-      // Stop activity tracking when component unmounts
       ipcRenderer.invoke('activity-stop').catch(console.error)
     }
   }, [])
@@ -69,13 +79,33 @@ export function TimeTracker({ className }) {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
+  // Fetch daily and weekly time summaries
+  const fetchTimeStats = async () => {
+    if (!user?.id) return
+    
+    try {
+      setLoadingStats(true)
+      const stats = await fetchTimeTrackingStats(user.id)
+      setTimeStats(stats)
+    } catch (error) {
+      console.error('Error fetching time stats:', error)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  // Fetch stats when component mounts and user changes
+  useEffect(() => {
+    fetchTimeStats()
+  }, [user?.id])
+
   const startTaskProcessing = async () => {
     try {
       if (!user?.id) {
         throw new Error('User ID not available')
       }
 
-      const addUserResponse = await fetch(`https://loop-1lxq.onrender.com/api/activity/worker/add/${user.id}`, {
+      const addUserResponse = await fetch(`${BACKEND_URL}/api/activity/worker/add/${user.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,11 +113,9 @@ export function TimeTracker({ className }) {
       })
 
       if (!addUserResponse.ok) {
-        // Continue anyway, user might already be added
       }
 
-      // eslint-disable-next-line no-unused-vars
-      const startWorkerResponse = await fetch('https://loop-1lxq.onrender.com/api/activity/worker/start', {
+      const startWorkerResponse = await fetch(`${BACKEND_URL}/api/activity/worker/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +123,6 @@ export function TimeTracker({ className }) {
       })
 
     } catch (error) {
-      // Don't fail the entire start process if task processing fails
     }
   }
 
@@ -110,7 +137,6 @@ export function TimeTracker({ className }) {
       }
     } catch (error) {
       console.error('Failed to start activity tracking:', error)
-      // Continue with timer even if tracking fails
     }
   }
 
@@ -146,13 +172,14 @@ export function TimeTracker({ className }) {
 
   const handlePlay = async () => {
     setIsStartingUp(true)
+    const startTime = new Date()
     
     try {
       // Start activity tracking first
       await startActivityTracking()
       
       // eslint-disable-next-line no-unused-vars
-      const response = await fetch('https://loop-1lxq.onrender.com/api/start', {
+      const response = await fetch(`${BACKEND_URL}/api/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,6 +188,14 @@ export function TimeTracker({ className }) {
       })
 
       await startTaskProcessing()
+
+      // Create a new time tracking session
+      try {
+        const sessionId = await createTimeTrackingSession(user?.id, startTime)
+        setCurrentSessionId(sessionId)
+      } catch (error) {
+        console.error('Failed to create time tracking session:', error)
+      }
       
     } catch (error) {
       console.error('Failed to start tracking:', error)
@@ -170,7 +205,10 @@ export function TimeTracker({ className }) {
     
     setIsRunning(true)
     setIsPaused(false)
-    setSessionStartTime(new Date()) // Track when this session started
+    setSessionStartTime(startTime) // Track when this session started
+    setPausedTime(0) // Reset accumulated pause time
+    setPauseStartTime(null) // Clear pause start time
+    setTime(0) // Reset displayed time
     
     // Notify activity tracker that timer is running
     await setTimerRunning(true)
@@ -179,16 +217,34 @@ export function TimeTracker({ className }) {
   const handlePause = async () => {
     setIsPaused(true)
     setIsRunning(false)
+    setPauseStartTime(new Date()) // Track when pause started
     
     // Notify activity tracker that timer is paused
     await setTimerRunning(false)
   }
 
   const handleStop = async () => {
+    const endTime = new Date()
+    const totalDuration = time // Current tracked time in seconds
+    
+    // Update the time tracking session with end time
+    if (currentSessionId && totalDuration > 0) {
+      try {
+        await updateTimeTrackingSession(currentSessionId, endTime, totalDuration)
+        // Refresh stats to show updated totals
+        await fetchTimeStats()
+      } catch (error) {
+        console.error('Failed to update time tracking session:', error)
+      }
+    }
+    
     setIsRunning(false)
     setIsPaused(false)
     setTime(0)
     setSessionStartTime(null) // Clear session start time
+    setPausedTime(0) // Reset accumulated pause time
+    setPauseStartTime(null) // Clear pause start time
+    setCurrentSessionId(null) // Clear session ID
     
     // Notify activity tracker that timer is stopped
     await setTimerRunning(false)
@@ -198,8 +254,15 @@ export function TimeTracker({ className }) {
   }
 
   const handleResume = async () => {
+    // Calculate pause duration and add to total paused time
+    if (pauseStartTime) {
+      const pauseDuration = Math.floor((new Date() - pauseStartTime) / 1000)
+      setPausedTime(prev => prev + pauseDuration)
+    }
+    
     setIsRunning(true)
     setIsPaused(false)
+    setPauseStartTime(null) // Clear pause start time
     
     // Notify activity tracker that timer is running again
     await setTimerRunning(true)
@@ -277,6 +340,47 @@ export function TimeTracker({ className }) {
             Total time tracked: {formatTime(time)}
           </div>
         )}
+
+        {/* Daily and Weekly Stats */}
+        <div className="border-t pt-4 space-y-3">
+          <h3 className="font-semibold text-sm text-center">Time Summary</h3>
+          
+          {loadingStats ? (
+            <div className="text-center text-sm text-muted-foreground">
+              Loading stats...
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="bg-blue-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-blue-600">
+                  {formatTime(timeStats.today)}
+                </div>
+                <div className="text-xs text-blue-600 font-medium">
+                  Today
+                </div>
+              </div>
+              
+              <div className="bg-green-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-green-600">
+                  {formatTime(timeStats.week)}
+                </div>
+                <div className="text-xs text-green-600 font-medium">
+                  This Week
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="text-center">
+            <button
+              onClick={fetchTimeStats}
+              disabled={loadingStats}
+              className="text-xs text-muted-foreground hover:text-primary underline disabled:opacity-50"
+            >
+              {loadingStats ? 'Refreshing...' : 'Refresh Stats'}
+            </button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )
