@@ -48,9 +48,10 @@
     "electron:build:portable": "node build-portable.js",
     "electron:build:simple": "npm run clean && npm run build && electron-builder --win --config.compression=store --config.win.target=portable",
     "electron:build:dir": "node build-dir.js",
-    "electron:build:legacy": "npm run build && npm run electron:package",
+    "electron:bu`ild:legacy": "npm run build && npm run electron:package",
     "electron:package": "electron-builder -c.extraMetadata.main=build/main.js",
     "build:win": "npm run build && npx electron-packager . \"Desktop Tracker\" --platform=win32 --arch=x64 --out=dist-packager --overwrite",
+    "build:mac-optimized": "node build-mac-optimized.js",
     "build:mac-intel": "npm run build && npx electron-packager . \"Desktop Tracker\" --platform=darwin --arch=x64 --out=dist-mac --overwrite",
     "build:mac-silicon": "npm run build && npx electron-packager . \"Desktop Tracker\" --platform=darwin --arch=arm64 --out=dist-mac --overwrite",
     "build:mac-all": "npm run build:mac-intel && npm run build:mac-silicon",
@@ -62,17 +63,56 @@
     "extends": null,
     "appId": "com.tracking.electron-cra",
     "productName": "Desktop Tracker",
-    "compression": "store",
+    "compression": "maximum",
     "files": [
       "build/**/*",
       "public/main.js",
       "public/preload.js",
-      "node_modules/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/**/*",
+      "node_modules/@electron/**/*",
+      "node_modules/@radix-ui/**/*",
+      "node_modules/@supabase/**/*",
+      "node_modules/child_process/**/*",
+      "node_modules/class-variance-authority/**/*",
+      "node_modules/clsx/**/*",
+      "node_modules/dotenv/**/*",
+      "node_modules/electron-is-dev/**/*",
+      "node_modules/get-windows/**/*",
+      "node_modules/lucide-react/**/*",
+      "node_modules/node-fetch/**/*",
+      "node_modules/node-window-manager/**/*",
+      "node_modules/os/**/*",
+      "node_modules/path/**/*",
+      "node_modules/ps-list/**/*",
+      "node_modules/react/**/*",
+      "node_modules/react-dom/**/*",
+      "node_modules/systeminformation/**/*",
+      "node_modules/tailwind-merge/**/*",
+      "node_modules/tailwindcss-animate/**/*"
     ],
     "directories": {
       "buildResources": "assets",
       "output": "dist"
+    },
+    "extraResources": [
+      "!node_modules/.cache/**/*"
+    ],
+    "extraMetadata": {
+      "main": "build/main.js"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
       "target": [
