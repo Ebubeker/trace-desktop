@@ -84,6 +84,15 @@
         }
       ]
     },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "gatekeeperAssess": false,
+      "identity": "Developer ID Application: Ebubeker Rexha (7MQMPR6BB5)"
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
