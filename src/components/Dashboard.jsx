@@ -20,7 +20,7 @@ export function Dashboard() {
 
   const isUser = userProfile?.role === 'user'
   const isAdmin = userProfile?.role === 'admin'
-  
+
   // If admin, show the admin dashboard
   if (isAdmin) {
     return <AdminDashboard />
@@ -28,25 +28,18 @@ export function Dashboard() {
 
   // For users, show the regular dashboard
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-gray-50 p-8" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       <div className="max-w-6xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>
+        <Card className="border border-gray-200/30">
+          <CardContent className="flex justify-between items-center">
+            <h1 className="text-2xl font-semibold">
               Welcome to your Dashboard{userProfile?.name ? `, ${userProfile.name}` : ''}!
-            </CardTitle>
-            <CardDescription>
-              <div className="space-y-1">
-                <p>Email: {user?.email}</p>
-                {userProfile?.role && <p>Role: {userProfile.role}</p>}
-                {userProfile?.created_at && (
-                  <p>Member since: {new Date(userProfile.created_at).toLocaleDateString()}</p>
-                )}
-              </div>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleSignOut} disabled={loading} variant="outline">
+            </h1>
+            <Button
+              onClick={handleSignOut}
+              disabled={loading}
+              className="bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
+            >
               {loading ? 'Signing out...' : 'Sign Out'}
             </Button>
           </CardContent>

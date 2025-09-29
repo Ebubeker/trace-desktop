@@ -104,7 +104,7 @@ class ActivityTracker {
     try {
       if (!this.userId) return;
 
-      const taskName = status === 'started' ? 'Work Session' : 'Work Session';
+      const taskName = status === 'started' ? 'Work Session Started' : 'Work Session Ended';
       const taskDescription = status === 'started' 
         ? 'Started a new work session' 
         : 'Completed work session';

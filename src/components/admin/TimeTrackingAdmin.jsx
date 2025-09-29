@@ -164,13 +164,13 @@ export function TimeTrackingAdmin() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="border border-gray-200/30">
+      <CardHeader className="text-[#111d29]">
+        <CardTitle className="flex items-center gap-2 text-xl font-semibold">
           <Clock className="h-5 w-5" />
           Time Tracking Analytics
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-600">
           Monitor and analyze user time tracking across your organization
         </CardDescription>
       </CardHeader>
