@@ -11,6 +11,7 @@ import { useAuth } from '../../hooks/useAuth'
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com'
 
 export function TaskManagement() {
+  console.log('[TaskManagement] Component mounted/remounted')
   const { userProfile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [users, setUsers] = useState([])
@@ -59,14 +60,17 @@ export function TaskManagement() {
   }
 
   const fetchUsers = async () => {
+    console.log('[TaskManagement] fetchUsers called - org_id:', userProfile?.org_id)
     if (!userProfile?.org_id) {
-      console.log('Cannot fetch users: org_id not available')
+      console.log('[TaskManagement] Cannot fetch users: org_id not available')
       setLoadingUsers(false)
       return
     }
 
+    console.log('[TaskManagement] Setting loadingUsers to true')
     setLoadingUsers(true)
     try {
+      console.log('[TaskManagement] Fetching from Supabase...')
       const { data, error } = await supabase
         .from('user_profiles')
         .select('id, name')
@@ -75,14 +79,19 @@ export function TaskManagement() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error fetching users:', error)
+        console.error('[TaskManagement] Error fetching users:', error)
+        setUsers([])
+        setLoadingUsers(false)
         return
       }
 
+      console.log('[TaskManagement] Fetched users:', data?.length, 'users')
       setUsers(data || [])
     } catch (error) {
-      console.error('Error fetching users:', error)
+      console.error('[TaskManagement] Error fetching users:', error)
+      setUsers([])
     } finally {
+      console.log('[TaskManagement] Setting loadingUsers to false')
       setLoadingUsers(false)
     }
   }
@@ -115,10 +124,13 @@ export function TaskManagement() {
   }
 
   useEffect(() => {
+    console.log('[TaskManagement] useEffect triggered - org_id:', userProfile?.org_id)
     if (userProfile?.org_id) {
+      console.log('[TaskManagement] Fetching users and tasks...')
       fetchUsers()
       fetchTasks()
     } else {
+      console.log('[TaskManagement] No org_id, setting loading states to false')
       // Ensure loading state is false if org_id is not available
       setLoadingUsers(false)
       setLoadingTasks(false)
@@ -317,6 +329,8 @@ export function TaskManagement() {
                 <Label htmlFor="user_id">Assign to User</Label>
                 {loadingUsers ? (
                   <div className="text-sm text-gray-500">Loading users...</div>
+                ) : users.length === 0 ? (
+                  <div className="text-sm text-red-500">No users found. Please check if users exist in your organization.</div>
                 ) : (
                   <Select
                     value={formData.user_id}
@@ -414,6 +428,8 @@ export function TaskManagement() {
             <Label htmlFor="user-select">Select User to View Tasks:</Label>
             {loadingUsers ? (
               <div className="text-sm text-gray-500 mt-2">Loading users...</div>
+            ) : users.length === 0 ? (
+              <div className="text-sm text-red-500 mt-2">No users found. Please check if users exist in your organization.</div>
             ) : (
               <Select
                 value={selectedUserId}

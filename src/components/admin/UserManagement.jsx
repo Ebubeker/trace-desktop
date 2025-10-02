@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth'
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com'
 
 export function UserManagement() {
+  console.log('[UserManagement] Component mounted/remounted')
   const { userProfile } = useAuth()
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(false)

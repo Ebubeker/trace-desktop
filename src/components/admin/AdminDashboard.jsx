@@ -22,6 +22,7 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(false)
   const [organizationData, setOrganizationData] = useState(null)
   const [loadingOrganization, setLoadingOrganization] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const handleSignOut = async () => {
     setLoading(true)
@@ -85,6 +86,12 @@ export function AdminDashboard() {
       setLoadingUsers(false)
     }
   }
+
+  // Increment refresh key when tab changes (not when org_id changes)
+  React.useEffect(() => {
+    console.log('[AdminDashboard] Tab changed to:', activeTab)
+    setRefreshKey(prev => prev + 1)
+  }, [activeTab])
 
   React.useEffect(() => {
     if (activeTab === 'activity' && userProfile?.org_id) {
@@ -166,13 +173,13 @@ export function AdminDashboard() {
         )
 
       case 'tasks':
-        return <TaskManagement />
+        return <TaskManagement key={`tasks-${refreshKey}`} />
 
       case 'time-tracking':
-        return <TimeTrackingAdmin />
+        return <TimeTrackingAdmin key={`time-tracking-${refreshKey}`} />
 
       case 'users':
-        return <UserManagement />
+        return <UserManagement key={`users-${refreshKey}`} />
 
       case 'profile':
         return (
