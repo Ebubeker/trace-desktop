@@ -162,6 +162,8 @@ class ActivityTracker {
       // Use environment variable for backend URL with fallback
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com';
       
+      console.log(`${backendUrl}/api/activity/add`)
+
       const response = await fetch(`${backendUrl}/api/activity/add`, {
         method: 'POST',
         headers: {
