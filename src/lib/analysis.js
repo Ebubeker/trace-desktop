@@ -114,3 +114,33 @@ export function getProcessedTaskStatusColor(status) {
       return 'text-gray-600 bg-gray-100';
   }
 }
+
+export async function fetchSubtasks(userId) {
+  const response = await fetch(`${BACKEND_URL}/api/activity/subtasks/${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch subtasks: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function fetchMajorTasks(userId) {
+  const response = await fetch(`${BACKEND_URL}/api/activity/major-tasks/${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch major tasks: ${response.statusText}`);
+  }
+
+  return response.json();
+}

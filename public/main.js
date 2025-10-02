@@ -58,7 +58,8 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        icon: path.join(__dirname, 'assets', 'android-icon-96x96.png'),
+        title: 'Pulselog',
+        icon: path.join(__dirname, 'pulselog.png'),
         webPreferences: {
             enableRemoteModule: true,
             nodeIntegration: true,

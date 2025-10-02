@@ -18,7 +18,7 @@ export function AuthForm() {
     setMessage('')
 
     try {
-      const { error } = isSignUp 
+      const { error } = isSignUp
         ? await signUp(email, password)
         : await signIn(email, password)
 
@@ -41,8 +41,8 @@ export function AuthForm() {
           {isSignUp ? 'Create Account' : 'Welcome Back'}
         </CardTitle>
         <CardDescription className="text-gray-600">
-          {isSignUp 
-            ? 'Create a new account to get started' 
+          {isSignUp
+            ? 'Create a new account to get started'
             : 'Sign in to your account'
           }
         </CardDescription>
@@ -71,24 +71,23 @@ export function AuthForm() {
               />
             </div>
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-[#111d29] hover:bg-[#1a2936] text-white border-none py-2.5"
             disabled={loading}
           >
             {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
           </Button>
           {message && (
-            <div className={`text-sm p-3 rounded-lg ${
-              message.includes('email') 
-                ? 'text-green-700 bg-green-50 border border-green-200/50' 
+            <div className={`text-sm p-3 rounded-lg ${message.includes('email')
+                ? 'text-green-700 bg-green-50 border border-green-200/50'
                 : 'text-red-700 bg-red-50 border border-red-200/50'
-            }`}>
+              }`}>
               {message}
             </div>
           )}
         </form>
-        <div className="text-center border-t pt-6">
+        {/* <div className="text-center border-t pt-6">
           <button
             type="button"
             className="text-sm text-[#111d29] hover:underline font-medium"
@@ -96,7 +95,7 @@ export function AuthForm() {
           >
             {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
           </button>
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   )

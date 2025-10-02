@@ -26,7 +26,12 @@ function AppContent() {
         <div className="min-h-screen flex items-center justify-center p-8">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-[#111d29] mb-2">Desktop Tracker</h1>
+              <img 
+                src="/pulselog.png" 
+                alt="Pulselog" 
+                className="w-24 h-24 mx-auto mb-4 rounded-2xl shadow-lg"
+              />
+              <h1 className="text-3xl font-bold text-[#111d29] mb-2">Pulselog</h1>
               <p className="text-gray-600">Track your productivity and manage tasks</p>
             </div>
             <AuthForm />

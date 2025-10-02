@@ -2,16 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import {
   fetchProcessedTasks,
+  fetchSubtasks,
+  fetchMajorTasks,
   formatTaskDuration,
   getProcessedTaskStatusColor
 } from '../lib/analysis';
 
 export function Logs({ limit = 50, userId }) {
   const [tasks, setTasks] = useState([]);
+  const [subtasks, setSubtasks] = useState([]);
+  const [majorTasks, setMajorTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expandedTask, setExpandedTask] = useState(null);
+  const [expandedSubtask, setExpandedSubtask] = useState(null);
+  const [expandedMajorTask, setExpandedMajorTask] = useState(null);
   const [lastNotifiedTaskIds, setLastNotifiedTaskIds] = useState(null);
+  const [viewMode, setViewMode] = useState('major-tasks'); // 'major-tasks', 'subtasks', 'processed-logs'
   const { user } = useAuth();
 
   // Request notification permission on component mount
@@ -24,20 +31,13 @@ export function Logs({ limit = 50, userId }) {
   // Check for no_focus notifications
   useEffect(() => {
     if (tasks.length >= 2) {
-      const lastTwoTasks = tasks.slice(0, 2); // Get the most recent 2 tasks
+      const lastTwoTasks = tasks.slice(0, 2);
       const bothHaveNoFocus = lastTwoTasks.every(task => task.no_focus === true);
       
-      console.log('Checking focus status:', {
-        lastTwoTasks: lastTwoTasks.map(t => ({ id: t.id, no_focus: t.no_focus })),
-        bothHaveNoFocus
-      });
-      
       if (bothHaveNoFocus) {
-        // Create a unique identifier for this set of tasks to avoid duplicate notifications
         const currentTaskIds = lastTwoTasks.map(task => task.id).sort().join('-');
         
         if (lastNotifiedTaskIds !== currentTaskIds) {
-          console.log('Triggering no-focus notification for tasks:', currentTaskIds);
           showNoFocusNotification();
           setLastNotifiedTaskIds(currentTaskIds);
         }
@@ -51,56 +51,28 @@ export function Logs({ limit = 50, userId }) {
         try {
           const notification = new Notification('Focus Alert', {
             body: 'You seem to be losing focus. The last 2 activities show no focus detected.',
-            icon: '/favicon.ico', // You can customize this
+            icon: '/favicon.ico',
             badge: '/favicon.ico',
-            tag: 'no-focus-alert', // This prevents multiple notifications with the same tag
-            requireInteraction: true, // Keeps notification visible until user interacts
+            tag: 'no-focus-alert',
+            requireInteraction: true,
           });
 
-          // Auto close after 10 seconds if user doesn't interact
           setTimeout(() => {
             notification.close();
           }, 10000);
 
-          // Optional: Handle notification click
           notification.onclick = () => {
-            window.focus(); // Bring window to front
+            window.focus();
             notification.close();
           };
-
-          console.log('Desktop notification sent successfully');
         } catch (error) {
           console.error('Failed to show desktop notification:', error);
-          showFallbackAlert();
         }
-      } else if (Notification.permission === 'denied') {
-        console.warn('Desktop notifications are denied. Showing fallback alert.');
-        showFallbackAlert();
-      } else {
-        // Permission is 'default', try to request it
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            showNoFocusNotification(); // Retry
-          } else {
-            showFallbackAlert();
-          }
-        });
       }
-    } else {
-      console.warn('Desktop notifications not supported. Showing fallback alert.');
-      showFallbackAlert();
     }
   };
 
-  const showFallbackAlert = () => {
-    // Fallback for when desktop notifications aren't available
-    console.warn('🚨 FOCUS ALERT: You seem to be losing focus. The last 2 activities show no focus detected.');
-    
-    // Optional: You could also show an in-app notification or alert
-    // For now, just log to console as a fallback
-  };
-
-  const fetchTasks = useCallback(async () => {
+  const fetchAllData = useCallback(async () => {
     const targetUserId = userId || user?.id;
     if (!targetUserId) return;
 
@@ -108,35 +80,62 @@ export function Logs({ limit = 50, userId }) {
     setError(null);
 
     try {
-      const tasksResponse = await fetchProcessedTasks(targetUserId, limit);
+      const [tasksResponse, subtasksResponse, majorTasksResponse] = await Promise.all([
+        fetchProcessedTasks(targetUserId, limit),
+        fetchSubtasks(targetUserId),
+        fetchMajorTasks(targetUserId)
+      ]);
+      
       setTasks(tasksResponse.tasks.tasks);
+      setSubtasks(subtasksResponse.subtasks || []);
+      setMajorTasks(majorTasksResponse.majorTasks || []);
     } catch (err) {
-      setError(err.message || 'Failed to load processed tasks');
+      setError(err.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
   }, [userId, user?.id, limit]);
 
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    fetchAllData();
+  }, [fetchAllData]);
 
   useEffect(() => {
     const targetUserId = userId || user?.id;
     if (!targetUserId) return;
 
     const interval = setInterval(() => {
-      fetchTasks();
+      fetchAllData();
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [fetchTasks, userId, user?.id]);
+  }, [fetchAllData, userId, user?.id]);
 
   const toggleTaskDetails = (taskId) => {
     setExpandedTask(expandedTask === taskId ? null : taskId);
   };
 
-  const formatTaskEntry = (task) => {
+  const toggleSubtaskDetails = (subtaskId) => {
+    setExpandedSubtask(expandedSubtask === subtaskId ? null : subtaskId);
+  };
+
+  const toggleMajorTaskDetails = (majorTaskId) => {
+    setExpandedMajorTask(expandedMajorTask === majorTaskId ? null : majorTaskId);
+  };
+
+  // Get processed log by ID
+  const getProcessedLogById = (id) => {
+    return tasks.find(task => task.id === parseInt(id));
+  };
+
+  // Get subtask by ID
+  const getSubtaskById = (id) => {
+    return subtasks.find(subtask => subtask.id === parseInt(id));
+  };
+
+  const formatProcessedLogEntry = (task, isNested = false) => {
+    if (!task) return null;
+
     const startTime = new Date(task.start_time).toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
@@ -144,22 +143,17 @@ export function Logs({ limit = 50, userId }) {
     });
 
     const isExpanded = expandedTask === task.id;
-    const duration = formatTaskDuration(task.duration_minutes);
-    const statusColor = getProcessedTaskStatusColor(task.status);
     const hasNoFocus = task.no_focus === true;
 
     const [shortDesc, bullets, conclusion] = task && task.log_pretty_desc ? task.log_pretty_desc.split("\n\n") : [];
-
-    
     const newBullet = bullets ? (bullets.includes("*") ? "*" : "-") : "-";
-
     const bulletLines = bullets ? bullets
       .split("\n")
       .filter(line => line.startsWith(newBullet))
       .map(line => line.replace(newBullet, "")) : [];
 
     return (
-      <div key={task.id} className="mb-1">
+      <div key={task.id} className={`mb-1 ${isNested ? 'ml-8' : ''}`}>
         <div
           className={`cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors ${
             hasNoFocus ? 'border-l-4 border-red-400 bg-red-50' : ''
@@ -203,59 +197,84 @@ export function Logs({ limit = 50, userId }) {
                 </p>
               </div>
             </div>
-            {/* {task.log_pretty_desc} */}
-            {/* <div className="flex items-center gap-2 mb-2">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>
-                {task.status}
-              </span>
-              <span className="text-sm text-gray-500">
-                Duration: {duration}
-              </span>
-              {task.end_time && (
-                <>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-sm text-gray-500">
-                    Ended: {new Date(task.end_time).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
-                  </span>
-                </>
-              )}
-            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-            {userId && (
-              <div className="mb-2">
-                <div className="font-medium text-gray-800 text-sm mb-1">User ID:</div>
-                <div className="text-gray-600 text-xs font-mono">{task.user_id}</div>
+  const formatSubtaskEntry = (subtask, isNested = false) => {
+    const isExpanded = expandedSubtask === subtask.id;
+    const processedLogs = subtask.personalized_task_ids.map(id => getProcessedLogById(id)).filter(Boolean);
+
+    return (
+      <div key={subtask.id} className={`mb-2 ${isNested ? 'ml-6 border-l-2 border-purple-200 pl-3' : ''}`}>
+        <div
+          className="cursor-pointer hover:bg-purple-50 px-3 py-2 rounded transition-colors border-l-4 border-purple-400 bg-purple-50/30"
+          onClick={() => toggleSubtaskDetails(subtask.id)}
+        >
+          <div className="flex items-start gap-2">
+            <span className="text-purple-700 font-medium text-sm">
+              {isExpanded ? '▼' : '▶'}
+            </span>
+            <div className="flex-1">
+              <div className="font-semibold text-purple-900">{subtask.subtask_name}</div>
+              <div className="text-xs text-purple-700 mt-1">{subtask.subtask_summary}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {subtask.personalized_task_ids.length} processed log{subtask.personalized_task_ids.length !== 1 ? 's' : ''}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="mt-2 space-y-1">
+            {processedLogs.length > 0 ? (
+              processedLogs.map(log => formatProcessedLogEntry(log, true))
+            ) : (
+              <div className="ml-8 text-sm text-gray-500 py-2">No processed logs found</div>
             )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
-            <div className="mb-2">
-              <div className="font-medium text-gray-800 text-sm mb-1">Task:</div>
-              <div className="text-gray-700 text-sm">{task.task_title}</div>
-            </div>
+  const formatMajorTaskEntry = (majorTask) => {
+    const isExpanded = expandedMajorTask === majorTask.id;
+    const relatedSubtasks = majorTask.subtask_ids.map(id => getSubtaskById(id)).filter(Boolean);
 
-            <div className="mb-3">
-              <div className="font-medium text-gray-800 text-sm mb-1">Description:</div>
-              <div className="text-gray-600 text-sm">{task.task_description}</div>
-            </div>
-
-            {task.activity_summaries && task.activity_summaries.length > 0 && (
-              <div>
-                <div className="font-medium text-gray-800 text-sm mb-2">Activity Details:</div>
-                <div className="space-y-1">
-                  {task.activity_summaries.map((summary, index) => (
-                    <div key={index} className="text-xs text-gray-600 pl-2 border-l-2 border-gray-100">
-                      <span className="font-mono text-gray-500">{summary.time}</span>
-                      <span className="ml-2 font-medium">{summary.title}</span>
-                      <div className="ml-4 text-gray-500">{summary.description}</div>
-                    </div>
-                  ))}
-                </div>
+    return (
+      <div key={majorTask.id} className="mb-3">
+        <div
+          className="cursor-pointer hover:bg-blue-50 px-4 py-3 rounded-lg transition-colors border-l-4 border-blue-500 bg-blue-50/50"
+          onClick={() => toggleMajorTaskDetails(majorTask.id)}
+        >
+          <div className="flex items-start gap-2">
+            <span className="text-blue-700 font-bold text-base">
+              {isExpanded ? '▼' : '▶'}
+            </span>
+            <div className="flex-1">
+              <div className="font-bold text-blue-900 text-base">{majorTask.major_task_title}</div>
+              <div className="mt-2 space-y-1">
+                {majorTask.major_task_summary.map((summary, idx) => (
+                  <div key={idx} className="text-sm text-blue-800">• {summary}</div>
+                ))}
               </div>
-            )} */}
+              <div className="text-xs text-gray-500 mt-2">
+                {majorTask.subtask_ids.length} subtask{majorTask.subtask_ids.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="mt-2 space-y-2">
+            {relatedSubtasks.length > 0 ? (
+              relatedSubtasks.map(subtask => formatSubtaskEntry(subtask, true))
+            ) : (
+              <div className="ml-6 text-sm text-gray-500 py-2">No subtasks found</div>
+            )}
           </div>
         )}
       </div>
@@ -266,7 +285,7 @@ export function Logs({ limit = 50, userId }) {
   if (!targetUserId) {
     return (
       <div className="w-full text-center text-gray-500 py-8">
-        Please log in to view processed tasks
+        Please log in to view activity data
       </div>
     );
   }
@@ -277,41 +296,105 @@ export function Logs({ limit = 50, userId }) {
 
       <div className="bg-gray-50 text-black font-sans text-sm h-[650px] overflow-y-auto px-4 py-8" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
 
+        {/* View Mode Tabs */}
         <div className="mb-4">
+          <div className="flex gap-2 mb-3 border-b border-gray-200">
+            <button
+              onClick={() => setViewMode('major-tasks')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                viewMode === 'major-tasks'
+                  ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Major Tasks ({majorTasks.length})
+            </button>
+            <button
+              onClick={() => setViewMode('subtasks')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                viewMode === 'subtasks'
+                  ? 'text-purple-700 border-b-2 border-purple-700 bg-purple-50'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Subtasks ({subtasks.length})
+            </button>
+            <button
+              onClick={() => setViewMode('processed-logs')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                viewMode === 'processed-logs'
+                  ? 'text-green-700 border-b-2 border-green-700 bg-green-50'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Processed Logs ({tasks.length})
+            </button>
+          </div>
+
           <div className="text-lg font-medium text-gray-800 mb-2">
-            Processed Activity Logs
+            {viewMode === 'major-tasks' && 'Major Tasks Overview'}
+            {viewMode === 'subtasks' && 'Subtasks Overview'}
+            {viewMode === 'processed-logs' && 'Processed Activity Logs'}
             {userId && <span className="text-sm font-normal text-gray-500"> - User: {userId.substring(0, 8)}...</span>}
           </div>
-          <div className="text-xs text-gray-500">Updates every 10 seconds • Click any log to see details</div>
+          <div className="text-xs text-gray-500">
+            Updates every 10 seconds • Click to expand and see details
+          </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <span>Loading processed tasks...</span>
+            <span>Loading data...</span>
           </div>
         ) : error ? (
           <div className="text-red-500 text-center py-4">
             Error: {error}
             <button
-              onClick={fetchTasks}
+              onClick={fetchAllData}
               className="ml-2 text-blue-500 underline"
             >
               Retry
             </button>
           </div>
-        ) : tasks.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">
-            <div className="mb-2">No processed tasks yet</div>
-            <div className="text-xs">
-              {userId
-                ? "This user hasn't started tracking or no context switches detected yet"
-                : "Start tracking - tasks will appear here when context switches are detected"
-              }
-            </div>
-          </div>
         ) : (
           <div className="space-y-0">
-            {tasks.map((task) => formatTaskEntry(task))}
+            {viewMode === 'major-tasks' && (
+              majorTasks.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">
+                  <div className="mb-2">No major tasks yet</div>
+                  <div className="text-xs">Major tasks will appear here as the system processes your activities</div>
+                </div>
+              ) : (
+                majorTasks.map(majorTask => formatMajorTaskEntry(majorTask))
+              )
+            )}
+
+            {viewMode === 'subtasks' && (
+              subtasks.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">
+                  <div className="mb-2">No subtasks yet</div>
+                  <div className="text-xs">Subtasks will appear here as the system processes your activities</div>
+                </div>
+              ) : (
+                subtasks.map(subtask => formatSubtaskEntry(subtask, false))
+              )
+            )}
+
+            {viewMode === 'processed-logs' && (
+              tasks.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">
+                  <div className="mb-2">No processed tasks yet</div>
+                  <div className="text-xs">
+                    {userId
+                      ? "This user hasn't started tracking or no context switches detected yet"
+                      : "Start tracking - tasks will appear here when context switches are detected"
+                    }
+                  </div>
+                </div>
+              ) : (
+                tasks.map(task => formatProcessedLogEntry(task, false))
+              )
+            )}
           </div>
         )}
       </div>
