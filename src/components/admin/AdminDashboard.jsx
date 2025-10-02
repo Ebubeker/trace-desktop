@@ -57,6 +57,12 @@ export function AdminDashboard() {
   }
 
   const fetchUsers = async () => {
+    if (!userProfile?.org_id) {
+      console.log('Cannot fetch users: org_id not available')
+      setLoadingUsers(false)
+      return
+    }
+
     setLoadingUsers(true)
     try {
       const { data, error } = await supabase
@@ -81,12 +87,12 @@ export function AdminDashboard() {
   }
 
   React.useEffect(() => {
-    if (activeTab === 'activity') {
+    if (activeTab === 'activity' && userProfile?.org_id) {
       fetchUsers()
     } else if (activeTab === 'profile') {
       fetchOrganizationData()
     }
-  }, [activeTab])
+  }, [activeTab, userProfile?.org_id])
 
   React.useEffect(() => {
     if (activeTab === 'profile' && userProfile?.org_id) {

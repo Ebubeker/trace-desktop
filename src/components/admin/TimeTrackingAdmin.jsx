@@ -20,6 +20,12 @@ export function TimeTrackingAdmin() {
   const [dateRange, setDateRange] = useState('week') // today, week, month, all
 
   const fetchUsers = async () => {
+    if (!userProfile?.org_id) {
+      console.log('Cannot fetch users: org_id not available')
+      setLoadingUsers(false)
+      return
+    }
+
     setLoadingUsers(true)
     try {
       const { data, error } = await supabase
@@ -123,8 +129,10 @@ export function TimeTrackingAdmin() {
   }
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    if (userProfile?.org_id) {
+      fetchUsers()
+    }
+  }, [userProfile?.org_id])
 
   useEffect(() => {
     if (users.length > 0) {

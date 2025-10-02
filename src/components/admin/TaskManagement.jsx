@@ -59,6 +59,12 @@ export function TaskManagement() {
   }
 
   const fetchUsers = async () => {
+    if (!userProfile?.org_id) {
+      console.log('Cannot fetch users: org_id not available')
+      setLoadingUsers(false)
+      return
+    }
+
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -107,9 +113,11 @@ export function TaskManagement() {
   }
 
   useEffect(() => {
-    fetchUsers()
-    fetchTasks()
-  }, [])
+    if (userProfile?.org_id) {
+      fetchUsers()
+      fetchTasks()
+    }
+  }, [userProfile?.org_id])
 
   // Add useEffect to refetch tasks when selected user changes
   useEffect(() => {
