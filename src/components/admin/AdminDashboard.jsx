@@ -89,7 +89,12 @@ export function AdminDashboard() {
   React.useEffect(() => {
     if (activeTab === 'activity' && userProfile?.org_id) {
       fetchUsers()
-    } else if (activeTab === 'profile') {
+    } else if (activeTab === 'activity' && !userProfile?.org_id) {
+      // Ensure loading state is false if org_id is not available
+      setLoadingUsers(false)
+    }
+    
+    if (activeTab === 'profile') {
       fetchOrganizationData()
     }
   }, [activeTab, userProfile?.org_id])

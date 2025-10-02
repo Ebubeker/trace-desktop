@@ -35,12 +35,18 @@ export function UserManagement() {
   const [formErrors, setFormErrors] = useState({})
 
   const fetchUsers = async () => {
+    if (!userProfile?.org_id) {
+      console.log('Cannot fetch users: org_id not available')
+      setLoadingUsers(false)
+      return
+    }
+
     setLoadingUsers(true)
     try {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('id, name, role, created_at')
-        .eq('org_id', userProfile?.org_id)
+        .eq('org_id', userProfile.org_id)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -61,6 +67,9 @@ export function UserManagement() {
   useEffect(() => {
     if (userProfile?.org_id) {
       fetchUsers()
+    } else {
+      // Ensure loading state is false if org_id is not available
+      setLoadingUsers(false)
     }
   }, [userProfile?.org_id])
 

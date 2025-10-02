@@ -14,9 +14,9 @@ export function TaskManagement() {
   const { userProfile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [users, setUsers] = useState([])
-  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [loadingUsers, setLoadingUsers] = useState(false)
   const [tasks, setTasks] = useState([])
-  const [loadingTasks, setLoadingTasks] = useState(true)
+  const [loadingTasks, setLoadingTasks] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState({})
   const [selectedUserId, setSelectedUserId] = useState('')
@@ -65,6 +65,7 @@ export function TaskManagement() {
       return
     }
 
+    setLoadingUsers(true)
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -87,6 +88,7 @@ export function TaskManagement() {
   }
 
   const fetchTasks = async (userId = null) => {
+    setLoadingTasks(true)
     try {
       const targetUserId = userId || selectedUserId
       let url = `${BACKEND_URL}/api/tasks`
@@ -116,6 +118,10 @@ export function TaskManagement() {
     if (userProfile?.org_id) {
       fetchUsers()
       fetchTasks()
+    } else {
+      // Ensure loading state is false if org_id is not available
+      setLoadingUsers(false)
+      setLoadingTasks(false)
     }
   }, [userProfile?.org_id])
 

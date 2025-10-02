@@ -131,6 +131,9 @@ export function TimeTrackingAdmin() {
   useEffect(() => {
     if (userProfile?.org_id) {
       fetchUsers()
+    } else {
+      // Ensure loading state is false if org_id is not available
+      setLoadingUsers(false)
     }
   }, [userProfile?.org_id])
 
