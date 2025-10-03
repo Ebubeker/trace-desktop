@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Logs } from '../Logs'
+import { Chat } from '../Chat'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 import { UserCircle, Mail, User, LogOut } from 'lucide-react'
@@ -153,7 +154,14 @@ export function AdminDashboard() {
                 </div>
 
                 {selectedUserId && (
-                  <Logs userId={selectedUserId} />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <Logs userId={selectedUserId} />
+                    </div>
+                    <div>
+                      <Chat userId={selectedUserId} />
+                    </div>
+                  </div>
                 )}
 
                 {!selectedUserId && !loadingUsers && users.length > 0 && (
