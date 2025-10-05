@@ -179,7 +179,7 @@ export function TimeTrackingAdmin() {
     <Card className="border border-gray-200/30">
       <CardHeader className="text-[#111d29]">
         <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-          <Clock className="h-5 w-5" />
+          <Clock className="h-5 w-5 text-[#111d29]" />
           Time Tracking Analytics
         </CardTitle>
         <CardDescription className="text-gray-600">
@@ -228,7 +228,11 @@ export function TimeTrackingAdmin() {
           </div>
 
           <div className="flex items-end">
-            <Button onClick={fetchTimeTrackingData} disabled={loadingTimeData}>
+            <Button 
+              onClick={fetchTimeTrackingData} 
+              disabled={loadingTimeData}
+              className="bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
+            >
               {loadingTimeData ? 'Loading...' : 'Refresh'}
             </Button>
           </div>
@@ -236,15 +240,15 @@ export function TimeTrackingAdmin() {
 
         {/* Summary Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-blue-50">
+          <Card className="bg-gray-50 border border-gray-200/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Clock className="h-5 w-5 text-blue-600" />
+                <div className="p-2 bg-[#111d29]/10 rounded-lg">
+                  <Clock className="h-5 w-5 text-[#111d29]" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-blue-600">Total Time</p>
-                  <p className="text-2xl font-bold text-blue-700">
+                  <p className="text-sm font-medium text-[#111d29]">Total Time</p>
+                  <p className="text-2xl font-bold text-[#111d29]">
                     {formatTime(summaryStats.total_seconds)}
                   </p>
                 </div>
@@ -252,15 +256,15 @@ export function TimeTrackingAdmin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-green-50">
+          <Card className="bg-gray-50 border border-gray-200/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <User className="h-5 w-5 text-green-600" />
+                <div className="p-2 bg-[#111d29]/10 rounded-lg">
+                  <User className="h-5 w-5 text-[#111d29]" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-green-600">Active Users</p>
-                  <p className="text-2xl font-bold text-green-700">
+                  <p className="text-sm font-medium text-[#111d29]">Active Users</p>
+                  <p className="text-2xl font-bold text-[#111d29]">
                     {summaryStats.active_users || 0}
                   </p>
                 </div>
@@ -268,15 +272,15 @@ export function TimeTrackingAdmin() {
             </CardContent>
           </Card>
 
-          <Card className="bg-purple-50">
+          <Card className="bg-gray-50 border border-gray-200/30">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
+                <div className="p-2 bg-[#111d29]/10 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-[#111d29]" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-purple-600">Avg Session</p>
-                  <p className="text-2xl font-bold text-purple-700">
+                  <p className="text-sm font-medium text-[#111d29]">Avg Session</p>
+                  <p className="text-2xl font-bold text-[#111d29]">
                     {formatTime(summaryStats.avg_session_seconds)}
                   </p>
                 </div>
@@ -321,15 +325,15 @@ export function TimeTrackingAdmin() {
               {selectedUserId === 'all' ? (
                 // Render user statistics
                 timeData.map((userStat) => (
-                  <Card key={userStat.user_id} className="border-l-4 border-l-green-500">
+                  <Card key={userStat.user_id} className="border border-gray-200/30">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-green-50 rounded-lg">
-                            <User className="h-4 w-4 text-green-600" />
+                          <div className="p-2 bg-[#111d29]/10 rounded-lg">
+                            <User className="h-4 w-4 text-[#111d29]" />
                           </div>
                           <div>
-                            <p className="font-medium">{getUserName(userStat.user_id)}</p>
+                            <p className="font-medium text-[#111d29]">{getUserName(userStat.user_id)}</p>
                             <p className="text-sm text-gray-600">
                               {getSessionsCount(userStat, dateRange)} session{getSessionsCount(userStat, dateRange) !== 1 ? 's' : ''} tracked
                             </p>
@@ -338,14 +342,11 @@ export function TimeTrackingAdmin() {
                         
                         <div className="text-right">
                           <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span className="font-bold text-lg">
+                            <Clock className="h-4 w-4 text-[#111d29]/60" />
+                            <span className="font-bold text-lg text-[#111d29]">
                               {formatTime(getTotalSeconds(userStat, dateRange))}
                             </span>
                           </div>
-                          <Badge variant="default">
-                            {getTotalSeconds(userStat, dateRange) > 0 ? "Active" : "Inactive"}
-                          </Badge>
                         </div>
                       </div>
                     </CardContent>

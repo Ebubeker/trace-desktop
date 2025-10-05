@@ -58,13 +58,24 @@ export function TodaysTasks() {
     setUpdating(prev => ({ ...prev, [taskId]: true }))
 
     try {
+      // Find the task to get its name and other details
+      const task = tasks.find(t => t.id === taskId)
+      if (!task) {
+        console.error('Task not found')
+        return
+      }
+
       const response = await fetch(`${BACKEND_URL}/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: 'completed'
+          name: task.name,
+          status: 'completed',
+          description: task.description || '',
+          category: task.category || '',
+          duration: task.duration || null
         })
       })
 
@@ -76,7 +87,8 @@ export function TodaysTasks() {
           )
         )
       } else {
-        console.error('Failed to update task status')
+        const errorData = await response.json()
+        console.error('Failed to update task status:', errorData)
       }
     } catch (error) {
       console.error('Error updating task:', error)
@@ -113,10 +125,10 @@ export function TodaysTasks() {
       <CardHeader className="text-[#111d29] rounded-t-lg">
         <CardTitle className="flex items-center gap-2 text-xl font-semibold">
           <Clock className="h-5 w-5" />
-          Today's Tasks
+          Todo Tasks
         </CardTitle>
         <CardDescription className="text-gray-600">
-          Your assigned tasks for today
+          Your assigned tasks
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -194,7 +206,7 @@ export function TodaysTasks() {
 
                       {/* Expandable description */}
                       {task.description && expandedTasks.has(task.id) && (
-                        <div className="ml-8 mr-2 mb-2 p-3 bg-gray-50 border-l-4 border-[#111d29] rounded-lg">
+                        <div className="ml-8 mr-2 mb-2 p-3 bg-gray-50 rounded-lg">
                           <p className="text-sm text-gray-700">{task.description}</p>
                         </div>
                       )}

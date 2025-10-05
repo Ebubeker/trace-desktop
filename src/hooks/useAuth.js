@@ -55,10 +55,13 @@ export const AuthProvider = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event)
       setSession(session)
       setUser(session?.user ?? null)
       
-      if (session?.user?.id) {
+      // Only fetch profile if signing in or user token refreshed
+      // Skip profile fetch on sign out to prevent hanging
+      if (session?.user?.id && event !== 'SIGNED_OUT') {
         const profile = await fetchUserProfile(session.user.id)
         setUserProfile(profile)
       } else {
@@ -98,9 +101,40 @@ export const AuthProvider = ({ children }) => {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUserProfile(null)
-    return { error: null }
+    try {
+      // Add timeout to prevent hanging
+      const signOutPromise = supabase.auth.signOut()
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Sign out timeout')), 5000)
+      )
+      
+      const { error } = await Promise.race([signOutPromise, timeoutPromise])
+        .catch((err) => {
+          console.warn('Sign out timeout or error, forcing local sign out:', err)
+          // Force local sign out even if server request fails
+          return { error: null }
+        })
+      
+      if (error) {
+        console.error('Sign out error:', error)
+      }
+      
+      // Always clear local state regardless of server response
+      setUser(null)
+      setUserProfile(null)
+      setSession(null)
+      setLoading(false)
+      
+      return { error: error ? error.message : null }
+    } catch (error) {
+      console.error('Sign out error:', error)
+      // Force local sign out on any error
+      setUser(null)
+      setUserProfile(null)
+      setSession(null)
+      setLoading(false)
+      return { error: error.message }
+    }
   }
 
   const value = {

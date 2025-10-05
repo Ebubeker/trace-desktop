@@ -1,6 +1,4 @@
 import React from 'react'
-import { Card, CardContent } from '../ui/card'
-import { Button } from '../ui/button'
 import { 
   ClipboardList, 
   Users, 
@@ -39,30 +37,26 @@ export function AdminSidebar({ activeTab, onTabChange }) {
   ]
 
   return (
-    <Card className="h-full border border-gray-200/30">
-      <CardContent className="p-4">
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold mb-4 text-[#111d29]">Admin Panel</h3>
-          {menuItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <Button
-                key={item.id}
-                variant="ghost"
-                className={`w-full justify-start ${
-                  activeTab === item.id
-                    ? 'bg-[#111d29] text-white hover:bg-[#1a2936] hover:text-white'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-                onClick={() => onTabChange(item.id)}
-              >
-                <Icon className="mr-2 h-4 w-4" />
-                {item.label}
-              </Button>
-            )
-          })}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="fixed left-0 top-0 h-screen w-16 bg-[#111d29] flex flex-col items-center z-50">
+      <nav className="space-y-4 flex-1 pt-[1.125rem]">
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          return (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              title={item.label}
+              className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                activeTab === item.id
+                  ? 'bg-white text-[#111d29]'
+                  : 'text-gray-300 hover:bg-[#1a2936] hover:text-white'
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </button>
+          )
+        })}
+      </nav>
+    </div>
   )
 } 

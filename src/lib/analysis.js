@@ -63,8 +63,17 @@ export async function fetchRawActivities(limit = 50) {
   return response.json();
 }
 
-export async function fetchProcessedTasks(userId, limit = 50) {
-  const response = await fetch(`${BACKEND_URL}/api/activity/tasks/${userId}?limit=${limit}`, {
+export async function fetchProcessedTasks(userId, limit = 50, fromDate = null, toDate = null) {
+  let url = `${BACKEND_URL}/api/activity/tasks/${userId}?limit=${limit}`;
+  
+  if (fromDate) {
+    url += `&fromDate=${fromDate.toISOString()}`;
+  }
+  if (toDate) {
+    url += `&toDate=${toDate.toISOString()}`;
+  }
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -115,8 +124,22 @@ export function getProcessedTaskStatusColor(status) {
   }
 }
 
-export async function fetchSubtasks(userId) {
-  const response = await fetch(`${BACKEND_URL}/api/activity/subtasks/${userId}`, {
+export async function fetchSubtasks(userId, fromDate = null, toDate = null) {
+  let url = `${BACKEND_URL}/api/activity/subtasks/${userId}`;
+  
+  const params = [];
+  if (fromDate) {
+    params.push(`fromDate=${fromDate.toISOString()}`);
+  }
+  if (toDate) {
+    params.push(`toDate=${toDate.toISOString()}`);
+  }
+  
+  if (params.length > 0) {
+    url += `?${params.join('&')}`;
+  }
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -130,8 +153,22 @@ export async function fetchSubtasks(userId) {
   return response.json();
 }
 
-export async function fetchMajorTasks(userId) {
-  const response = await fetch(`${BACKEND_URL}/api/activity/major-tasks/${userId}`, {
+export async function fetchMajorTasks(userId, fromDate = null, toDate = null) {
+  let url = `${BACKEND_URL}/api/activity/major-tasks/${userId}`;
+  
+  const params = [];
+  if (fromDate) {
+    params.push(`fromDate=${fromDate.toISOString()}`);
+  }
+  if (toDate) {
+    params.push(`toDate=${toDate.toISOString()}`);
+  }
+  
+  if (params.length > 0) {
+    url += `?${params.join('&')}`;
+  }
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

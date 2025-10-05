@@ -7,6 +7,20 @@ import { Label } from '../ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { 
+  Plus, 
+  Edit3, 
+  Save, 
+  X, 
+  Trash2, 
+  CheckCircle, 
+  Circle,
+  Eye,
+  Calendar,
+  Clock,
+  User,
+  Tag
+} from 'lucide-react'
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://loop-1lxq.onrender.com'
 
@@ -22,6 +36,10 @@ export function TaskManagement() {
   const [deleteLoading, setDeleteLoading] = useState({})
   const [selectedUserId, setSelectedUserId] = useState('')
   const [showTodayOnly, setShowTodayOnly] = useState(true)
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' })
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [showTaskModal, setShowTaskModal] = useState(false)
+  const [statusLoading, setStatusLoading] = useState({})
   
   const [formData, setFormData] = useState({
     name: '',
@@ -152,6 +170,62 @@ export function TaskManagement() {
     }))
   }
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      duration: '',
+      category: '',
+      user_id: ''
+    })
+    setEditingTask(null)
+  }
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type })
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: 'success' })
+    }, 3000)
+  }
+
+  const handleQuickStatusChange = async (taskId, newStatus) => {
+    setStatusLoading(prev => ({ ...prev, [taskId]: true }))
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (response.ok) {
+        // Refresh tasks list
+        fetchTasks()
+        showNotification(`Task status updated to ${newStatus}!`, 'success')
+      } else {
+        const errorData = await response.json()
+        showNotification(`Error updating task status: ${errorData.message || response.statusText}`, 'error')
+      }
+    } catch (error) {
+      console.error('Error updating task status:', error)
+      showNotification('Error updating task status. Please try again.', 'error')
+    } finally {
+      setStatusLoading(prev => ({ ...prev, [taskId]: false }))
+    }
+  }
+
+  const handleTaskClick = (task) => {
+    setSelectedTask(task)
+    setShowTaskModal(true)
+  }
+
+  const closeTaskModal = () => {
+    setShowTaskModal(false)
+    setSelectedTask(null)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -176,27 +250,20 @@ export function TaskManagement() {
       })
 
       if (response.ok) {
-        // Reset form
-        setFormData({
-          name: '',
-          description: '',
-          duration: '',
-          category: '',
-          user_id: ''
-        })
-        setEditingTask(null)
+        // Reset form immediately after successful submission
+        resetForm()
         
         // Refresh tasks list
         fetchTasks()
         
-        alert(editingTask ? 'Task updated successfully!' : 'Task created successfully!')
+        showNotification(editingTask ? 'Task updated successfully!' : 'Task created successfully!', 'success')
       } else {
         const errorData = await response.json()
-        alert(`Error ${editingTask ? 'updating' : 'creating'} task: ${errorData.message || response.statusText}`)
+        showNotification(`Error ${editingTask ? 'updating' : 'creating'} task: ${errorData.message || response.statusText}`, 'error')
       }
     } catch (error) {
       console.error(`Error ${editingTask ? 'updating' : 'creating'} task:`, error)
-      alert(`Error ${editingTask ? 'updating' : 'creating'} task. Please try again.`)
+      showNotification(`Error ${editingTask ? 'updating' : 'creating'} task. Please try again.`, 'error')
     } finally {
       setLoading(false)
     }
@@ -215,14 +282,7 @@ export function TaskManagement() {
   }
 
   const handleCancelEdit = () => {
-    setEditingTask(null)
-    setFormData({
-      name: '',
-      description: '',
-      duration: '',
-      category: '',
-      user_id: ''
-    })
+    resetForm()
   }
 
   const handleDelete = async (taskId) => {
@@ -240,14 +300,14 @@ export function TaskManagement() {
       if (response.ok) {
         // Refresh tasks list
         fetchTasks()
-        alert('Task deleted successfully!')
+        showNotification('Task deleted successfully!', 'success')
       } else {
         const errorData = await response.json()
-        alert(`Error deleting task: ${errorData.message || response.statusText}`)
+        showNotification(`Error deleting task: ${errorData.message || response.statusText}`, 'error')
       }
     } catch (error) {
       console.error('Error deleting task:', error)
-      alert('Error deleting task. Please try again.')
+      showNotification('Error deleting task. Please try again.', 'error')
     } finally {
       setDeleteLoading(prev => ({ ...prev, [taskId]: false }))
     }
@@ -257,16 +317,39 @@ export function TaskManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Notification */}
+      {notification.show && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+          notification.type === 'success' 
+            ? 'bg-green-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          {notification.message}
+        </div>
+      )}
+      
       {/* Create/Edit Task Form */}
       <Card className="border border-gray-200/30">
-        <CardHeader className="text-[#111d29]">
-          <CardTitle className="text-xl font-semibold">{editingTask ? 'Edit Task' : 'Create New Task'}</CardTitle>
+        <CardHeader className={`text-[#111d29]`}>
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            {editingTask ? (
+              <>
+                <Edit3 className="w-5 h-5 text-[#111d29]/50" />
+                Edit Task: {editingTask.name}
+              </>
+            ) : (
+              <>
+                <Plus className="w-5 h-5 text-[#111d29]" />
+                Create New Task
+              </>
+            )}
+          </CardTitle>
           <CardDescription className="text-gray-600">
-            {editingTask ? 'Update task details and requirements' : 'Assign tasks to users with specific requirements and duration'}
+            {editingTask ? 'Update task details and requirements below' : 'Assign tasks to users with specific requirements and duration'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form key={editingTask?.id || 'new'} onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Task Name</Label>
@@ -376,9 +459,27 @@ export function TaskManagement() {
               <Button 
                 type="submit" 
                 disabled={loading || !isFormValid}
-                className="w-full md:w-auto bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
+                className={`w-full md:w-auto border-none ${
+                  editingTask 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-[#111d29] hover:bg-[#1a2936] text-white'
+                }`}
               >
-                {loading ? (editingTask ? 'Updating...' : 'Creating...') : (editingTask ? 'Update Task' : 'Create Task')}
+                {loading ? (
+                  editingTask ? 'Updating...' : 'Creating...'
+                ) : (
+                  editingTask ? (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Update Task
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Task
+                    </>
+                  )
+                )}
               </Button>
               
               {editingTask && (
@@ -387,9 +488,10 @@ export function TaskManagement() {
                   variant="outline"
                   onClick={handleCancelEdit}
                   disabled={loading}
-                  className="w-full md:w-auto"
+                  className="w-full md:w-auto border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
-                  Cancel
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel Edit
                 </Button>
               )}
             </div>
@@ -455,54 +557,222 @@ export function TaskManagement() {
           ) : (() => {
             const filteredTasks = getFilteredTasks()
             return filteredTasks.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {filteredTasks.slice(0, 10).map((task) => (
-                <div key={task.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1 flex-1">
-                      <h4 className="font-medium">{task.name}</h4>
-                      <p className="text-sm text-gray-600">{task.description}</p>
-                      <div className="flex gap-4 text-xs text-gray-500">
+                  <div 
+                    key={task.id} 
+                    className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                      editingTask?.id === task.id ? 'bg-blue-50 border-blue-300 shadow-md' : ''
+                    }`}
+                    onClick={() => handleTaskClick(task)}
+                  >
+                    {/* Checkbox for quick status change */}
+                    <div className="flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+                          handleQuickStatusChange(task.id, newStatus)
+                        }}
+                        disabled={statusLoading[task.id]}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                      >
+                        {task.status === 'completed' ? (
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Task content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900 truncate">{task.name}</h4>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          task.status === 'completed' 
+                            ? 'bg-green-100 text-green-800' 
+                            : task.status === 'in_progress'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {task.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 truncate mt-1">{task.description}</p>
+                      <div className="flex gap-4 text-xs text-gray-500 mt-1">
                         <span>Category: {task.category}</span>
                         {task.duration && <span>Duration: {task.duration}min</span>}
-                        <span>Status: {task.status}</span>
+                        {task.created_at && (
+                          <span>Created: {new Date(task.created_at).toLocaleDateString()}</span>
+                        )}
                       </div>
-                      {task.created_at && (
-                        <div className="text-xs text-gray-400">
-                          Created: {new Date(task.created_at).toLocaleDateString()}
-                        </div>
-                      )}
                     </div>
-                    <div className="flex flex-col gap-2 ml-4">
+                    
+                    {/* Action buttons */}
+                    <div className="flex gap-2 flex-shrink-0">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleEdit(task)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEdit(task)
+                        }}
                         disabled={loading}
+                        className="text-xs border-[#111d29] text-[#111d29] hover:bg-blue-50"
                       >
+                        <Edit3 className="w-3 h-3 mr-1" />
                         Edit
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => handleDelete(task.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(task.id)
+                        }}
                         disabled={deleteLoading[task.id]}
+                        className="text-xs"
                       >
-                        {deleteLoading[task.id] ? 'Deleting...' : 'Delete'}
+                        {deleteLoading[task.id] ? (
+                          <>
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              {showTodayOnly ? "No tasks created today" : "No tasks created yet"}
-            </div>
-          )
-        })()}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                {showTodayOnly ? "No tasks created today" : "No tasks created yet"}
+              </div>
+            )
+          })()}
         </CardContent>
       </Card>
+
+      {/* Task Details Modal */}
+      {showTaskModal && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedTask.name}</h2>
+                <button
+                  onClick={closeTaskModal}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-gray-700 mb-2">Description</h3>
+                  <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">
+                    {selectedTask.description}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Tag className="w-4 h-4" />
+                      Category
+                    </h3>
+                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      {selectedTask.category}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Duration
+                    </h3>
+                    <p className="text-gray-600">
+                      {selectedTask.duration ? `${selectedTask.duration} minutes` : 'Not specified'}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      {selectedTask.status === 'completed' ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : selectedTask.status === 'in_progress' ? (
+                        <Clock className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-yellow-600" />
+                      )}
+                      Status
+                    </h3>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm ${
+                      selectedTask.status === 'completed' 
+                        ? 'bg-green-100 text-green-800' 
+                        : selectedTask.status === 'in_progress'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {selectedTask.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Created
+                    </h3>
+                    <p className="text-gray-600">
+                      {selectedTask.created_at ? new Date(selectedTask.created_at).toLocaleDateString() : 'Unknown'}
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedTask.user_id && (
+                  <div>
+                    <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Assigned User
+                    </h3>
+                    <p className="text-gray-600">
+                      {users.find(u => u.id === selectedTask.user_id)?.name || 'Unknown User'}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-3 mt-6 pt-4 border-t">
+                <Button
+                  onClick={() => {
+                    closeTaskModal()
+                    handleEdit(selectedTask)
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  Edit Task
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={closeTaskModal}
+                  className="flex-1"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

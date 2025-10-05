@@ -13,9 +13,26 @@ export function Dashboard() {
   const [loading, setLoading] = useState(false)
 
   const handleSignOut = async () => {
-    setLoading(true)
-    await signOut()
-    setLoading(false)
+    try {
+      setLoading(true)
+      
+      // Add timeout wrapper to ensure loading state is reset
+      const signOutWithTimeout = Promise.race([
+        signOut(),
+        new Promise((resolve) => setTimeout(() => resolve({ error: null }), 6000))
+      ])
+      
+      const { error } = await signOutWithTimeout
+      if (error) {
+        console.error('Failed to sign out:', error)
+        alert('Failed to sign out. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error during sign out:', error)
+      alert('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const isUser = userProfile?.role === 'user'
@@ -28,11 +45,12 @@ export function Dashboard() {
 
   // For users, show the regular dashboard
   return (
-    <div className="min-h-screen bg-gray-50 p-8" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      <div className="max-w-6xl mx-auto space-y-6">
-        <Card className="border border-gray-200/30">
-          <CardContent className="flex justify-between items-center">
-            <h1 className="text-2xl font-semibold">
+    <div className="min-h-screen bg-gray-50" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      <div className="min-h-screen">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-40">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-semibold text-[#111d29]">
               Welcome to your Dashboard{userProfile?.name ? `, ${userProfile.name}` : ''}!
             </h1>
             <Button
@@ -42,16 +60,19 @@ export function Dashboard() {
             >
               {loading ? 'Signing out...' : 'Sign Out'}
             </Button>
-          </CardContent>
-        </Card>
-
-        {isUser && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
-            <TimeTracker />
-            <TodaysTasks />
-            {/* <ActivityMonitor /> */}
           </div>
-        )}
+        </div>
+
+        {/* Content Area */}
+        <div className="p-8">
+          {isUser && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+              <TimeTracker />
+              <TodaysTasks />
+              {/* <ActivityMonitor /> */}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

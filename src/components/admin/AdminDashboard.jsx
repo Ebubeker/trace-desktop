@@ -26,9 +26,26 @@ export function AdminDashboard() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const handleSignOut = async () => {
-    setLoading(true)
-    await signOut()
-    setLoading(false)
+    try {
+      setLoading(true)
+      
+      // Add timeout wrapper to ensure loading state is reset
+      const signOutWithTimeout = Promise.race([
+        signOut(),
+        new Promise((resolve) => setTimeout(() => resolve({ error: null }), 6000))
+      ])
+      
+      const { error } = await signOutWithTimeout
+      if (error) {
+        console.error('Failed to sign out:', error)
+        alert('Failed to sign out. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error during sign out:', error)
+      alert('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const fetchOrganizationData = async () => {
@@ -117,67 +134,65 @@ export function AdminDashboard() {
     switch (activeTab) {
       case 'activity':
         return (
-          <Card className="border border-gray-200/30">
-            <CardHeader className="text-[#111d29]">
-              <CardTitle className="text-xl font-semibold">Activity Logs</CardTitle>
-              <CardDescription className="text-gray-600">
-                View processed activity logs from users
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select User to View Logs:
-                  </label>
-                  {loadingUsers ? (
-                    <div className="text-sm text-gray-500">Loading users...</div>
-                  ) : (
-                    <select
-                      value={selectedUserId}
-                      onChange={(e) => setSelectedUserId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200/50 rounded-md focus:outline-none focus:ring-2 focus:ring-[#111d29]/20 focus:border-[#111d29]"
-                    >
-                      <option value="">Select a user...</option>
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.name || user.email} ({user.id.substring(0, 8)}...)
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {!loadingUsers && users.length === 0 && (
-                    <div className="text-sm text-red-500 mt-2">
-                      No users found or failed to load users. Check console for errors.
-                    </div>
-                  )}
+          <div className="space-y-3">
+            <div className="bg-white border border-gray-200/30 rounded-lg p-6 flex justify-between items-center">
+              <div className="mb-4">
+                <div className="gap-3">
+                  <h2 className="text-xl font-semibold text-[#111d29]">Activity Logs</h2>
+                  <p className="text-sm text-gray-600">View processed activity logs from users</p>
                 </div>
-
-                {selectedUserId && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <Logs userId={selectedUserId} />
-                    </div>
-                    <div>
-                      <Chat userId={selectedUserId} />
-                    </div>
-                  </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select User to View Logs:
+                </label>
+                {loadingUsers ? (
+                  <div className="text-sm text-gray-500">Loading users...</div>
+                ) : (
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="w-full max-w-md px-3 py-2 border border-gray-200/50 rounded-md focus:outline-none focus:ring-2 focus:ring-[#111d29]/20 focus:border-[#111d29]"
+                  >
+                    <option value="">Select a user...</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name || user.email} ({user.id.substring(0, 8)}...)
+                      </option>
+                    ))}
+                  </select>
                 )}
-
-                {!selectedUserId && !loadingUsers && users.length > 0 && (
-                  <div className="text-center text-gray-500 py-8">
-                    Please select a user to view their activity logs
-                  </div>
-                )}
-
                 {!loadingUsers && users.length === 0 && (
-                  <div className="text-center text-gray-500 py-8">
-                    No users with 'user' role found
+                  <div className="text-sm text-red-500 mt-2">
+                    No users found or failed to load users. Check console for errors.
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {selectedUserId && (
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <Logs userId={selectedUserId} />
+                </div>
+                <div>
+                  <Chat userId={selectedUserId} />
+                </div>
+              </div>
+            )}
+
+            {!selectedUserId && !loadingUsers && users.length > 0 && (
+              <div className="text-center text-gray-500 py-8 bg-white rounded-lg border border-gray-200/30">
+                Please select a user to view their activity logs
+              </div>
+            )}
+
+            {!loadingUsers && users.length === 0 && (
+              <div className="text-center text-gray-500 py-8 bg-white rounded-lg border border-gray-200/30">
+                No users with 'user' role found
+              </div>
+            )}
+          </div>
         )
 
       case 'tasks':
@@ -228,10 +243,10 @@ export function AdminDashboard() {
                       <div className="mt-1">
                         <Badge className={`${
                           userProfile?.role === 'admin' 
-                            ? 'bg-red-100 text-red-800'
+                            ? '!bg-[#111d29] !text-white'
                             : userProfile?.role === 'manager'
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-green-100 text-green-800'
+                            ? '!bg-[#111d29]/80 !text-white' 
+                            : '!bg-[#111d29]/60 !text-white'
                         }`}>
                           {userProfile?.role?.toUpperCase() || 'USER'}
                         </Badge>
@@ -372,11 +387,15 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      {/* Sidebar */}
+      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Main Content */}
+      <div className="ml-16 min-h-screen">
         {/* Header with user info */}
-        <Card className="border border-gray-200/30">
-          <CardContent className="flex justify-between items-center">
+        <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-40">
+          <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-[#111d29]">
               Admin Dashboard{userProfile?.name ? ` - ${userProfile.name}` : ''}
             </h1>
@@ -387,19 +406,12 @@ export function AdminDashboard() {
             >
               {loading ? 'Signing out...' : 'Sign Out'}
             </Button>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           </div>
+        </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {renderContent()}
-          </div>
+        {/* Content Area */}
+        <div className="p-8 py-4">
+          {renderContent()}
         </div>
       </div>
     </div>
