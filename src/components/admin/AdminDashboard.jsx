@@ -119,16 +119,10 @@ export function AdminDashboard() {
       setLoadingUsers(false)
     }
     
-    if (activeTab === 'profile') {
-      fetchOrganizationData()
-    }
-  }, [activeTab, userProfile?.org_id])
-
-  React.useEffect(() => {
     if (activeTab === 'profile' && userProfile?.org_id) {
       fetchOrganizationData()
     }
-  }, [userProfile?.org_id])
+  }, [activeTab, userProfile?.org_id])
 
   const renderContent = () => {
     switch (activeTab) {

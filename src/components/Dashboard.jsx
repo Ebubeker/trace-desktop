@@ -35,7 +35,7 @@ export function Dashboard() {
     }
   }
 
-  const isUser = userProfile?.role === 'user'
+  const isUser = userProfile?.role === 'user' || !userProfile // Default to user if no profile
   const isAdmin = userProfile?.role === 'admin'
 
   // If admin, show the admin dashboard
@@ -51,7 +51,7 @@ export function Dashboard() {
         <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-40">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-[#111d29]">
-              Welcome to your Dashboard{userProfile?.name ? `, ${userProfile.name}` : ''}!
+              Welcome to your Dashboard{userProfile?.name ? `, ${userProfile.name}` : user?.email ? `, ${user.email.split('@')[0]}` : ''}!
             </h1>
             <Button
               onClick={handleSignOut}

@@ -113,7 +113,7 @@ export function Logs({ limit = 50, userId }) {
     } finally {
       setLoading(false);
     }
-  }, [userId, user?.id, limit, fromDate, toDate]);
+  }, [userId, user?.id, limit, fromDate?.getTime(), toDate?.getTime()]);
 
   useEffect(() => {
     fetchAllData();
@@ -128,7 +128,7 @@ export function Logs({ limit = 50, userId }) {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [fetchAllData, userId, user?.id]);
+  }, [userId, user?.id]); // Remove fetchAllData from dependencies to prevent interval recreation
 
   const toggleTaskDetails = (taskId) => {
     setExpandedTask(expandedTask === taskId ? null : taskId);

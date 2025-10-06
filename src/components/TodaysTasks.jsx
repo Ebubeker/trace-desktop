@@ -51,7 +51,9 @@ export function TodaysTasks() {
   }
 
   useEffect(() => {
-    fetchTodaysTasks()
+    if (userProfile?.id) {
+      fetchTodaysTasks()
+    }
   }, [userProfile?.id])
 
   const handleMarkCompleted = async (taskId) => {

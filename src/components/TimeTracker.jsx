@@ -96,7 +96,9 @@ export function TimeTracker({ className }) {
 
   // Fetch stats when component mounts and user changes
   useEffect(() => {
-    fetchTimeStats()
+    if (user?.id) {
+      fetchTimeStats()
+    }
   }, [user?.id])
 
   const startTaskProcessing = async () => {

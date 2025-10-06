@@ -44,22 +44,36 @@ export async function updateTimeTrackingSession(sessionId, endTime, totalDuratio
 
 // Fetch daily and weekly time summaries
 export async function fetchTimeTrackingStats(userId) {
-  const response = await fetch(`${BACKEND_URL}/api/time-tracking/stats/${userId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/time-tracking/stats/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch time stats: ${response.status}`);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch time stats: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      today: data.today_seconds || 0,
+      week: data.week_seconds || 0
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - please check your connection');
+    }
+    throw error;
   }
-
-  const data = await response.json();
-  return {
-    today: data.today_seconds || 0,
-    week: data.week_seconds || 0
-  };
 }
 
 // Get time tracking history for a user
