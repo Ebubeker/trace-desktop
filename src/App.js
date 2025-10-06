@@ -6,19 +6,13 @@ import ErrorBoundary from './components/ErrorBoundary'
 import './App.css'
 
 function AppContent() {
-  const { user, userProfile, loading } = useAuth()
+  const { user, loading } = useAuth()
   const [appReady, setAppReady] = useState(false)
 
-  // Add debugging
-  useEffect(() => {
-    console.log('App state:', { user: !!user, userProfile: !!userProfile, loading, appReady })
-  }, [user, userProfile, loading, appReady])
-
-  // Add a small delay to ensure proper rendering on macOS
   useEffect(() => {
     const timer = setTimeout(() => {
       setAppReady(true)
-    }, 100) // Small delay to prevent white screen on macOS
+    }, 100)
 
     return () => clearTimeout(timer)
   }, [])
@@ -42,11 +36,22 @@ function AppContent() {
         <div className="min-h-screen flex items-center justify-center p-8">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
-              <img 
-                src="/pulselog.png" 
-                alt="Pulselog" 
-                className="w-24 h-24 mx-auto mb-4 rounded-2xl shadow-lg"
-              />
+              <div className="w-24 h-24 mx-auto mb-4 rounded-2xl shadow-lg bg-[#111d29] flex items-center justify-center">
+                <img
+                  src={process.env.PUBLIC_URL + "/pulselog.png"}
+                  alt="Pulselog"
+                  className="w-full h-full object-contain rounded-2xl"
+                  onError={(e) => {
+                    console.error('Failed to load pulselog.png, showing fallback');
+                    e.target.style.display = 'none';
+                    // Show a fallback icon
+                    const fallback = document.createElement('div');
+                    fallback.className = 'w-full h-full flex items-center justify-center text-white text-2xl font-bold';
+                    fallback.textContent = 'P';
+                    e.target.parentNode.appendChild(fallback);
+                  }}
+                />
+              </div>
               <h1 className="text-3xl font-bold text-[#111d29] mb-2">Pulselog</h1>
               <p className="text-gray-600">Track your productivity and manage tasks</p>
             </div>

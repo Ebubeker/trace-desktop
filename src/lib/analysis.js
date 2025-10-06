@@ -63,7 +63,7 @@ export async function fetchRawActivities(limit = 50) {
   return response.json();
 }
 
-export async function fetchProcessedTasks(userId, limit = 50, fromDate = null, toDate = null) {
+export async function fetchProcessedTasks(userId, limit = 500, fromDate = null, toDate = null) {
   let url = `${BACKEND_URL}/api/activity/tasks/${userId}?limit=${limit}`;
   
   if (fromDate) {

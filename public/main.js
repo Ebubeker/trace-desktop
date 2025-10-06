@@ -55,11 +55,24 @@ function startActivityBroadcast() {
 }
 
 function createWindow() {
+    // Set app icon - use pulselog.png for all platforms
+    let iconPath = path.join(__dirname, 'pulselog.png');
+    console.log(`${process.platform} detected, using pulselog.png icon:`, iconPath);
+    
+    // Check if icon file exists
+    const fs = require('fs');
+    if (!fs.existsSync(iconPath)) {
+        console.warn('⚠️  Icon file not found:', iconPath);
+        console.log('Available files in public directory:', fs.readdirSync(__dirname));
+    } else {
+        console.log('✅ Icon file found:', iconPath);
+    }
+
     mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
         title: 'Pulselog',
-        icon: path.join(__dirname, 'pulselog.png'),
+        icon: iconPath,
         webPreferences: {
             enableRemoteModule: true,
             nodeIntegration: true,
@@ -96,7 +109,6 @@ app.on('window-all-closed', () => {
 app.on('before-quit', async () => {
     try {
         activityTracker.stop()
-        console.log('Activity tracking cleanup completed')
     } catch (error) {
         console.error('Error during activity tracking cleanup:', error)
     }

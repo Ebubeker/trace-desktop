@@ -52,9 +52,10 @@
     "electron:bu`ild:legacy": "npm run build && npm run electron:package",
     "electron:package": "electron-builder -c.extraMetadata.main=build/main.js",
     "build:win": "npm run build && npx electron-packager . \"Pulselog\" --platform=win32 --arch=x64 --out=dist-packager --overwrite --icon=public/pulselog.png",
+    "create-mac-icon": "node scripts/create-mac-icon.js",
     "build:mac-optimized": "node build-mac-optimized.js",
-    "build:mac-intel": "npm run build && npx electron-packager . \"Pulselog\" --platform=darwin --arch=x64 --out=dist-mac --overwrite --icon=public/pulselog.png",
-    "build:mac-silicon": "npm run build && npx electron-packager . \"Pulselog\" --platform=darwin --arch=arm64 --out=dist-mac --overwrite --icon=public/pulselog.png",
+    "build:mac-intel": "npm run create-mac-icon && npm run build && npx electron-packager . \"Pulselog\" --platform=darwin --arch=x64 --out=dist-mac --overwrite --icon=public/pulselog.png",
+    "build:mac-silicon": "npm run create-mac-icon && npm run build && npx electron-packager . \"Pulselog\" --platform=darwin --arch=arm64 --out=dist-mac --overwrite --icon=public/pulselog.png",
     "build:mac-all": "npm run build:mac-intel && npm run build:mac-silicon",
     "build:all": "npm run build:win && npm run build:mac-all",
     "clean": "rimraf dist build",
@@ -103,6 +104,7 @@
     "extraMetadata": {
       "main": "build/main.js"
     },
+    "icon": "public/pulselog.png",
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg",
@@ -110,7 +112,8 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "gatekeeperAssess": false,
-      "identity": "Developer ID Application: Ebubeker Rexha (7MQMPR6BB5)"
+      "identity": "Developer ID Application: Ebubeker Rexha (7MQMPR6BB5)",
+      "icon": "public/pulselog.png"
     },
     "afterSign": "scripts/notarize.js",
     "win": {
@@ -121,7 +124,19 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "icon": "public/pulselog.png"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/pulselog.png"
     },
     "nsis": {
       "oneClick": false,

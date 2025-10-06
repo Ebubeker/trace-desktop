@@ -12,7 +12,7 @@ import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
 import { Button } from './ui/button';
 import { CalendarIcon, X, Target, Info, ListTodo } from 'lucide-react';
 
-export function Logs({ limit = 50, userId }) {
+export function Logs({ limit = 500, userId }) {
   const [tasks, setTasks] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
   const [majorTasks, setMajorTasks] = useState([]);
@@ -197,7 +197,7 @@ export function Logs({ limit = 50, userId }) {
           <span className='font-[500] text-[#1b3652]'>
             {dateDisplay}{startTime}
           </span>
-          <span className="text-gray-700"> – User {task.task_title}</span>
+          <span className="text-gray-700"> – {task.task_title}</span>
           {hasNoFocus && (
             <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
               🔴 No Focus
@@ -579,7 +579,7 @@ export function Logs({ limit = 50, userId }) {
               {userId && <span className={`text-sm font-normal ${viewMode === 'task-hierarchy' && hierarchyLevel === 'major-tasks'
                   ? 'text-black/70'
                   : 'text-black/70'
-                }`}> - User: {userId.substring(0, 8)}...</span>}
+                }`}> - {userId.substring(0, 8)}...</span>}
             </div>
             <div className={`text-xs ${viewMode === 'task-hierarchy' && hierarchyLevel === 'major-tasks'
                 ? 'text-black/70'
