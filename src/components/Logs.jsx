@@ -155,6 +155,45 @@ export function Logs({ limit = 500, userId }) {
     return subtasks.find(subtask => subtask.id === parseInt(id));
   };
 
+  // Format log description with proper structure
+  const formatLogDescription = (description) => {
+    if (!description) return null;
+
+    // Split by sections (Intent, Actions, Outcome)
+    const sections = description.split(/(?=### Intent|### Actions|### Outcome)/);
+    
+    return (
+      <div className="">
+        {sections.map((section, index) => {
+          if (!section.trim()) return null;
+          
+          const lines = section.trim().split('\n');
+          const title = lines[0];
+          const content = lines.slice(1).join('\n').trim();
+          
+          // Determine section type and styling
+          let sectionClass = '';
+          let titleClass = '';
+          
+          if (title.includes('###')) {
+            titleClass = 'text-[#111d29] text-md font-semibold';
+          }
+          
+          return (
+            <div key={index} className={`p-1 rounded-lg ${sectionClass}`}>
+              <div className={`${titleClass}`}>
+                {title.replace(/### /g, '')}
+              </div>
+              <div className="text-sm text-gray-700 leading-relaxed">
+                <ReactMarkdown>{content}</ReactMarkdown>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const formatProcessedLogEntry = (task, isNested = false) => {
     if (!task) return null;
 
@@ -221,7 +260,7 @@ export function Logs({ limit = 500, userId }) {
           <>
             {task.task_description && (
               <div className="text-gray-600 bg-gray-50 p-3 rounded-md prose prose-sm max-w-none">
-                <ReactMarkdown>{task.task_description}</ReactMarkdown>
+                {formatLogDescription(task.task_description)}
               </div>
             )}
           </>
@@ -642,7 +681,7 @@ export function Logs({ limit = 500, userId }) {
 
                 {hierarchyLevel === 'processed-logs' && selectedSubtask && (
                   (() => {
-                    const processedLogs = selectedSubtask.personalized_task_ids.map(id => getProcessedLogById(id)).filter(Boolean);
+                     const processedLogs = selectedSubtask.personalized_task_ids.map(id => getProcessedLogById(id)).filter(Boolean);
                     return processedLogs.length === 0 ? (
                       <div className="text-gray-500 text-center py-8">
                         <div className="mb-2">No processed logs found</div>
