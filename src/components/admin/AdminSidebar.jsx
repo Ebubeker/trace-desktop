@@ -1,6 +1,5 @@
 import React from 'react'
 import { 
-  ClipboardList, 
   Users, 
   Activity,
   UserCircle,
@@ -13,11 +12,6 @@ export function AdminSidebar({ activeTab, onTabChange }) {
       id: 'activity',
       label: 'Activity Logs',
       icon: Activity
-    },
-    {
-      id: 'tasks',
-      label: 'Task Management', 
-      icon: ClipboardList
     },
     {
       id: 'time-tracking',

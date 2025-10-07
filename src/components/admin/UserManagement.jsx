@@ -350,13 +350,13 @@ export function UserManagement() {
               Create and manage user accounts for your organization
             </CardDescription>
           </div>
-          <Button 
+          {/* <Button 
             onClick={() => setShowCreateForm(!showCreateForm)}
             className="gap-2 bg-[#111d29] hover:bg-[#1a2936] text-white border-none"
           >
             <UserPlus className="h-4 w-4" />
             {showCreateForm ? 'Cancel' : 'Add User'}
-          </Button>
+          </Button> */}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -375,7 +375,7 @@ export function UserManagement() {
         )}
 
         {/* Create User Form */}
-        {showCreateForm && (
+        {/* {showCreateForm && (
           <Card className="border border-gray-200/50 bg-gray-50">
             <CardHeader className="text-[#111d29]">
               <CardTitle className="text-lg font-semibold">Create New User</CardTitle>
@@ -493,7 +493,7 @@ export function UserManagement() {
               </form>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         {/* Users List */}
         <div>
@@ -520,7 +520,7 @@ export function UserManagement() {
                 <div key={user.id} className="flex items-center gap-3 p-3 bg-white border rounded-lg hover:bg-gray-50">
                   {/* Left: Name */}
                   <div className="flex-1">
-                    {editingUserId === user.id ? (
+                    {/* {editingUserId === user.id ? (
                       <Input
                         value={editingData.name}
                         onChange={(e) => setEditingData(prev => ({ ...prev, name: e.target.value }))}
@@ -528,16 +528,16 @@ export function UserManagement() {
                         placeholder="Enter name"
                         disabled={updating[user.id]}
                       />
-                    ) : (
+                    ) : ( */}
                       <span className="font-medium text-gray-900">
                         {user.name || 'Unnamed User'}
                       </span>
-                    )}
+                    {/* )} */}
                   </div>
 
                   {/* Center: Role */}
                   <div className="flex-1 text-center">
-                    {editingUserId === user.id ? (
+                    {/* {editingUserId === user.id ? (
                       <Select 
                         value={editingData.role} 
                         onValueChange={(value) => setEditingData(prev => ({ ...prev, role: value }))}
@@ -552,16 +552,16 @@ export function UserManagement() {
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
-                    ) : (
+                    ) : ( */}
                       <Badge className={getRoleBadgeColor(user.role)}>
                         {user.role?.toUpperCase() || 'USER'}
                       </Badge>
-                    )}
+                    {/* )} */}
                   </div>
 
                   {/* Right: Actions */}
                   <div className="flex items-center gap-2">
-                    {editingUserId === user.id ? (
+                    {/* {editingUserId === user.id ? (
                       <>
                         <Button
                           size="sm"
@@ -611,7 +611,20 @@ export function UserManagement() {
                           )}
                         </Button>
                       </>
-                    )}
+                    )} */}
+                    {/* <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteUser(user.id, user.name)}
+                      disabled={deleting[user.id]}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      {deleting[user.id] ? (
+                        <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button> */}
                   </div>
                 </div>
               ))}
